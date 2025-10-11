@@ -3,8 +3,8 @@
 #include "weather.h"
 
 int main() {
-    const std::string apiKey = "YOUR_API_KEY";
-    const std::string city = "YOUR_CITY";
+    const std::string apiKey = "234a6c0a573a4526bbb53739251110";
+    const std::string city = "Chicago,US";
     
     int fd = wiringPiI2CSetup(0x27); // or whatever address
     if (fd < 0) {
