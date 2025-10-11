@@ -7,7 +7,7 @@
 
 int main() {
     const std::string apiKey = "234a6c0a573a4526bbb53739251110";  // Your WeatherAPI.com key
-    const std::string city = "Westmont,%20IL"; // Your city or ZIP code
+    const std::string city = "Westmont, IL"; // Your city or ZIP code
 
     std::cout << "\n[INFO] ==============================" << std::endl;
     std::cout << "[INFO] Starting WeatherDisplay" << std::endl;

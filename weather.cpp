@@ -3,7 +3,26 @@
 #include <string>
 #include <iostream>
 #include <nlohmann/json.hpp>
+
 using json = nlohmann::json;
+
+std::string urlEncode(const std::string &value) {
+    std::ostringstream escaped;
+    escaped.fill('0');
+    escaped << std::hex;
+
+    for (char c : value) {
+        if (isalnum(static_cast<unsigned char>(c)) || c == '-' || c == '_' || c == '.' || c == '~') {
+            escaped << c;
+        } else if (c == ' ') {
+            escaped << "%20";
+        } else {
+            escaped << '%' << std::setw(2) << int((unsigned char)c);
+        }
+    }
+
+    return escaped.str();
+}
 
 static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp) {
     ((std::string*)userp)->append((char*)contents, size * nmemb);
