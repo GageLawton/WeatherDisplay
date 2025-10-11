@@ -9,7 +9,7 @@ ExecStart=/home/gagem/Documents/WeatherDisplay/weather
 WorkingDirectory=/home/gagem/Documents/WeatherDisplay
 Restart=on-failure
 RestartSec=10
-User=pi
+User=gagem
 StandardOutput=journal
 StandardError=journal
 
