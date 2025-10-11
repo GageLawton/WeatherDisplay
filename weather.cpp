@@ -10,13 +10,14 @@ static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *use
     return size * nmemb;
 }
 
-// Updated getWeather with optional rawResponse output parameter
 Weather getWeather(const std::string& apiKey, const std::string& city, std::string* rawResponse) {
     CURL* curl;
     CURLcode res;
     std::string readBuffer;
 
-    std::string url = "https://api.openweathermap.org/data/2.5/weather?q=" + city + "&appid=" + apiKey + "&units=metric";
+    std::string url = "https://api.weatherapi.com/v1/current.json?key=" + apiKey + "&q=" + city;
+
+    std::cout << "[INFO] Requesting URL: " << url << std::endl;
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
     curl = curl_easy_init();
@@ -37,9 +38,9 @@ Weather getWeather(const std::string& apiKey, const std::string& city, std::stri
         return Weather{"N/A", 0.0f};
     }
 
-    // Save raw response if requested
     if (rawResponse) {
         *rawResponse = readBuffer;
+        std::cout << "[DEBUG] API Response: " << readBuffer << std::endl;
     }
 
     curl_easy_cleanup(curl);
@@ -48,18 +49,18 @@ Weather getWeather(const std::string& apiKey, const std::string& city, std::stri
     try {
         auto j = json::parse(readBuffer);
 
-        // Safe access with checks to avoid crashes
         std::string description = "N/A";
         float temp = 0.0f;
 
-        if (j.contains("weather") && j["weather"].is_array() && !j["weather"].empty()) {
-            if (j["weather"][0].contains("description") && !j["weather"][0]["description"].is_null()) {
-                description = j["weather"][0]["description"].get<std::string>();
+        if (j.contains("current")) {
+            if (j["current"].contains("condition") && j["current"]["condition"].contains("text") && !j["current"]["condition"]["text"].is_null()) {
+                description = j["current"]["condition"]["text"].get<std::string>();
             }
-        }
-
-        if (j.contains("main") && j["main"].contains("temp") && !j["main"]["temp"].is_null()) {
-            temp = j["main"]["temp"].get<float>();
+            if (j["current"].contains("temp_c") && !j["current"]["temp_c"].is_null()) {
+                temp = j["current"]["temp_c"].get<float>();
+            }
+        } else {
+            std::cerr << "[ERROR] 'current' field missing in API response\n";
         }
 
         return Weather{description, temp};
