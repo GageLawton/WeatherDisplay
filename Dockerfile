@@ -1,25 +1,31 @@
-# Use arm32v7 Debian Bullseye slim base image (for Raspberry Pi 3/4 32-bit)
-FROM arm32v7/debian:bullseye-slim
+FROM debian:bookworm
 
-# Set working directory
+# Install build tools and libraries
+RUN apt-get update && \
+    apt-get install -y \
+        g++ \
+        git \
+        make \
+        libcurl4-openssl-dev \
+        nlohmann-json3-dev \
+        libi2c-dev \
+        ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Build WiringPi manually (avoiding 'sudo' issues)
+RUN git clone https://github.com/WiringPi/WiringPi.git /tmp/wiringpi && \
+    cd /tmp/wiringpi/wiringPi && make && make install && \
+    cd /tmp/wiringpi/devLib && make && make install && \
+    rm -rf /tmp/wiringpi
+
+# Set the working directory
 WORKDIR /app
 
-# Install build dependencies and required packages
-RUN apt-get update && apt-get install -y \
-    g++ \
-    make \
-    libcurl4-openssl-dev \
-    wiringpi \
-    libi2c-dev \
-    libjsoncpp-dev \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy source files into container
+# Copy source code into the container
 COPY . .
 
-# Build the binary
-RUN g++ -std=c++17 -o weather main.cpp weather.cpp lcd.cpp -lwiringPi -lcurl
+# Compile your weather display app
+RUN g++ -o weather main.cpp weather.cpp lcd.cpp -lwiringPi -lcurl
 
-# Default command to run your weather binary
+# Default command when container runs
 CMD ["./weather"]
