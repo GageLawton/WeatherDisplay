@@ -1,3 +1,6 @@
+#include <wiringPiI2C.h>
+#include <wiringPi.h>
+#include <unistd.h>
 #include <iostream>
 #include "lcd.h"
 #include "weather.h"

@@ -10,11 +10,6 @@ static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *use
     return size * nmemb;
 }
 
-struct Weather {
-    std::string description;
-    double tempC;
-};
-
 Weather getWeather(const std::string& apiKey, const std::string& city) {
     CURL* curl;
     CURLcode res;
