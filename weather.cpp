@@ -2,6 +2,8 @@
 #include <curl/curl.h>
 #include <string>
 #include <iostream>
+#include <iomanip>
+#include <sstream>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
@@ -20,7 +22,6 @@ std::string urlEncode(const std::string &value) {
             escaped << '%' << std::setw(2) << int((unsigned char)c);
         }
     }
-
     return escaped.str();
 }
 
