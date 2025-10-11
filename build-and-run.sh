@@ -11,7 +11,6 @@ NC='\033[0m' # No Color
 IMAGE_NAME="weather-display"
 TEMP_CONTAINER="weather-temp"
 BINARY_PATH="./weather"
-CONTAINER_NAME="weather-runner"
 
 function info() {
     echo -e "${BLUE}[INFO]${NC} $1"
@@ -34,10 +33,6 @@ function cleanup {
         warning "Cleaning up temporary container..."
         podman rm -f $TEMP_CONTAINER >/dev/null 2>&1 || true
     fi
-    if podman container exists $CONTAINER_NAME; then
-        warning "Cleaning up previous running container..."
-        podman rm -f $CONTAINER_NAME >/dev/null 2>&1 || true
-    fi
 }
 
 trap cleanup EXIT
@@ -59,17 +54,7 @@ podman rm -f "$TEMP_CONTAINER" >/dev/null
 info "✅ Setting executable permissions on '$BINARY_PATH'..."
 chmod +x "$BINARY_PATH"
 
-success "Build completed successfully!"
+success "Build completed successfully! Running binary now..."
 
-info "🚀 Running container '$CONTAINER_NAME' with I2C device access..."
-
-podman run --rm -it \
-    --device /dev/i2c-1 \
-    --group-add i2c \
-    --privileged \
-    --name "$CONTAINER_NAME" \
-    "$IMAGE_NAME"
-
-# Optionally, run the binary locally (uncomment if you want this)
-# info "Running local binary..."
-# exec "$BINARY_PATH"
+# Run the binary replacing the shell process
+exec "$BINARY_PATH"
