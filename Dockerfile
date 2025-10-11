@@ -1,31 +1,31 @@
-FROM debian:bookworm
+# Use a base image with Raspberry Pi OS
+FROM arm32v7/debian:bullseye-slim
 
-# Install build tools and libraries
-RUN apt-get update && \
-    apt-get install -y \
-        g++ \
-        git \
-        make \
-        libcurl4-openssl-dev \
-        nlohmann-json3-dev \
-        libi2c-dev \
-        ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Build WiringPi manually (avoiding 'sudo' issues)
-RUN git clone https://github.com/WiringPi/WiringPi.git /tmp/wiringpi && \
-    cd /tmp/wiringpi/wiringPi && make && make install && \
-    cd /tmp/wiringpi/devLib && make && make install && \
-    rm -rf /tmp/wiringpi
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    g++ \
+    git \
+    curl \
+    libcurl4-openssl-dev \
+    libi2c-dev \
+    wiringpi \
+    libjsoncpp-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Set the working directory
+# Clone the repository
 WORKDIR /app
+RUN git clone https://github.com/GageLawton/WeatherDisplay.git .
 
-# Copy source code into the container
-COPY . .
+# Build the application
+RUN cmake . && make
 
-# Compile your weather display app
-RUN g++ -o weather main.cpp weather.cpp lcd.cpp -lwiringPi -lcurl
+# Set the entry point to run the weather application
+ENTRYPOINT ["./weather"]
 
-# Default command when container runs
-CMD ["./weather"]
+# Ensure the container has access to I2C and GPIO
+USER root
