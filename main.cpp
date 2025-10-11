@@ -1,25 +1,15 @@
-#include "lcd.cpp"
-#include "weather.cpp"
 #include <iostream>
-#include <unistd.h>
-#include <wiringPiI2C.h>
+#include <string>
+#include "weather.h"
+#include "lcd.h"
 
 int main() {
-    const std::string apiKey = "YOUR_API_KEY";
-    const std::string city = "Chicago";
+    std::string apiKey = "YOUR_API_KEY";
+    std::string city = "YOUR_CITY";
 
-    int fd = wiringPiI2CSetup(0x27);
-    lcd_init(fd);
-
-    while (true) {
-        auto weather = getWeather(apiKey, city);
-
-        std::string temp = "Temp: " + std::to_string((int)weather.tempC) + "C";
-        std::string desc = weather.description.substr(0, 16); // fit LCD width
-
-        lcd_display(fd, temp, desc);
-        sleep(600); // update every 10 min
-    }
+    std::string weather = getWeather(apiKey, city);
+    lcd_init(0x27);  // or whatever your LCD I2C address is
+    lcd_display(0x27, "Weather:", weather);
 
     return 0;
 }
