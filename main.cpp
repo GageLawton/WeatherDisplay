@@ -7,35 +7,46 @@
 
 int main() {
     const std::string apiKey = "234a6c0a573a4526bbb53739251110";  // Your WeatherAPI.com key
-    const std::string city = "Chicago";
+    const std::string city = "60059"; // Your city or ZIP code
 
-    std::cout << "[INFO] Starting WeatherDisplay..." << std::endl;
+    std::cout << "\n[INFO] ==============================" << std::endl;
+    std::cout << "[INFO] Starting WeatherDisplay" << std::endl;
+    std::cout << "[INFO] Location: " << city << std::endl;
+    std::cout << "[INFO] Units: Fahrenheit (°F)" << std::endl;
+    std::cout << "[INFO] ==============================\n" << std::endl;
 
     int fd = wiringPiI2CSetup(0x27); // Use your actual LCD I2C address
     if (fd < 0) {
         std::cerr << "[ERROR] Failed to open I2C bus!" << std::endl;
         return 1;
     }
+
     lcd_init(fd);
 
     while (true) {
-        std::cout << "[INFO] Fetching weather data..." << std::endl;
+        std::cout << "\n[DEBUG] ---- Fetching weather data ----" << std::endl;
 
         std::string rawResponse;
         Weather w = getWeather(apiKey, city, &rawResponse);
 
-        // Debug print to console
-        std::cout << "[INFO] Weather Description: " << w.description << std::endl;
-        std::cout << "[INFO] Temperature: " << w.tempC << " °C" << std::endl;
+        float tempF = (w.tempC * 9.0f / 5.0f) + 32.0f;
 
-        // Prepare LCD display strings (max 16 chars)
-        std::string line1 = "Temp: " + std::to_string((int)w.tempC) + "C";
+        std::cout << "[DEBUG] Description : " << w.description << std::endl;
+        std::cout << "[DEBUG] Temperature  : " << w.tempC << " °C / " << tempF << " °F" << std::endl;
+
+        // Optional: show raw JSON (comment out if noisy)
+        std::cout << "[DEBUG] Raw API JSON : " << rawResponse << std::endl;
+
+        // Prepare LCD display strings
+        std::string line1 = "Temp: " + std::to_string((int)tempF) + "F";
         std::string line2 = w.description.substr(0, 16);
 
         lcd_display(fd, line1, line2);
 
-        std::cout << "[INFO] Display updated. Sleeping for 10 min..." << std::endl;
-        sleep(600); // Sleep for 10 minutes
+        std::cout << "[INFO] Display updated: [" << line1 << "] / [" << line2 << "]" << std::endl;
+        std::cout << "[INFO] Sleeping for 10 minutes...\n" << std::endl;
+
+        sleep(600); // 10 minutes
     }
 
     return 0;
