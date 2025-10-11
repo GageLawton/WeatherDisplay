@@ -1,3 +1,4 @@
+#include "weather.h"
 #include <curl/curl.h>
 #include <string>
 #include <iostream>

@@ -3,6 +3,11 @@
 
 #include <string>
 
-std::string getWeather(const std::string& apiKey, const std::string& city);
+struct Weather {
+    std::string description;
+    double tempC;
+};
 
-#endif
+Weather getWeather(const std::string &apiKey, const std::string &city);
+
+#endif // WEATHER_H

@@ -1,3 +1,4 @@
+#include "lcd.h"
 #include <wiringPiI2C.h>
 #include <unistd.h>
 #include <string>

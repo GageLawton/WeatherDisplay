@@ -3,7 +3,7 @@
 
 #include <string>
 
-void lcd_init(int addr);
-void lcd_display(int addr, const std::string& line1, const std::string& line2);
+void lcd_init(int fd);
+void lcd_display(int fd, const std::string &line1, const std::string &line2);
 
-#endif
+#endif // LCD_H
