@@ -1,0 +1,17 @@
+[Unit]
+Description=WeatherDisplay - Weather on LCD via Raspberry Pi
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/home/gagem/Documents/WeatherDisplay/weather
+WorkingDirectory=/home/gagem/Documents/WeatherDisplay
+Restart=on-failure
+RestartSec=10
+User=pi
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
