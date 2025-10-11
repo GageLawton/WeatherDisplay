@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SERVICE_NAME="weather-display.service"
-SERVICE_PATH="./$SERVICE_NAME"
+SERVICE_PATH="./systemd/$SERVICE_NAME"
 SYSTEMD_DIR="/etc/systemd/system"
 
 # Exit if service file does not exist
