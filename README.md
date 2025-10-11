@@ -1,20 +1,13 @@
-# WeatherDisplay
+# 1. Clone the repository
+git clone https://github.com/GageLawton/WeatherDisplay.git
+cd WeatherDisplay
 
-# Compile
-# podman build -t weather-display .
+# 2. Configure your API key
+#    (Edit main.cpp )
 
-# Temp Container
-# podman create --name weather-temp weather-display
+# 3. Make Executable
+chmod +x build-and-run.sh
 
-# Copy Binary out of Container
-# podman cp weather-temp:/app/weather ./weather
-
-# Destroy Temp Container
-# podman rm weather-temp
-
-# Make Binary Executable
-# chmod +x ./weather
-
-# Run Bin
-# ./weather
+# 3. Build and Run the project
+./build-and-run.sh
 
