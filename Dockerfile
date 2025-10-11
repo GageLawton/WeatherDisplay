@@ -1,12 +1,13 @@
-FROM debian:bookworm
-
 RUN apt-get update && \
-    apt-get install -y g++ wiringpi libcurl4-openssl-dev nlohmann-json3-dev && \
+    apt-get install -y \
+        g++ \
+        git \
+        make \
+        libcurl4-openssl-dev \
+        nlohmann-json3-dev \
+        libi2c-dev \
+        ca-certificates && \
+    git clone https://github.com/WiringPi/WiringPi.git /tmp/wiringpi && \
+    cd /tmp/wiringpi && ./build && \
+    rm -rf /tmp/wiringpi && \
     rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-COPY . .
-
-RUN g++ -o weather main.cpp -lwiringPi -lcurl
-
-CMD ["./weather"]
