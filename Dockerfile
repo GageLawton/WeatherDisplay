@@ -1,31 +1,25 @@
-# Use a base image with Raspberry Pi OS
-FROM arm64v8/debian:bullseye-slim
+# Use arm32v7 Debian Bullseye slim base image (for Raspberry Pi 3/4 32-bit)
+FROM arm32v7/debian:bullseye-slim
 
-# Set environment variables
-ENV DEBIAN_FRONTEND=noninteractive
+# Set working directory
+WORKDIR /app
 
-# Install dependencies
+# Install build dependencies and required packages
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    cmake \
     g++ \
-    git \
-    curl \
+    make \
     libcurl4-openssl-dev \
-    libi2c-dev \
     wiringpi \
+    libi2c-dev \
     libjsoncpp-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Clone the repository
-WORKDIR /app
-RUN git clone https://github.com/GageLawton/WeatherDisplay.git .
+# Copy source files into container
+COPY . .
 
-# Build the application
-RUN cmake . && make
+# Build the binary
+RUN g++ -std=c++17 -o weather main.cpp weather.cpp lcd.cpp -lwiringPi -lcurl
 
-# Set the entry point to run the weather application
-ENTRYPOINT ["./weather"]
-
-# Ensure the container has access to I2C and GPIO
-USER root
+# Default command to run your weather binary
+CMD ["./weather"]
