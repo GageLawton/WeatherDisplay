@@ -1,5 +1,5 @@
 # Use a base image with Raspberry Pi OS
-FROM arm32v7/debian:bullseye-slim
+FROM docker.io/arm32v7/debian:bullseye-slim
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
