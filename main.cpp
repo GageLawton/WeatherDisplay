@@ -7,7 +7,7 @@
 
 int main() {
     const std::string apiKey = "234a6c0a573a4526bbb53739251110";
-    const std::string city = "Chicago,US";
+    const std::string city = "Chicago";
     
     std::cout << "[INFO] Starting WeatherDisplay..." << std::endl;
 
@@ -22,7 +22,12 @@ int main() {
     while (true) {
         std::cout << "[INFO] Fetching weather data..." << std::endl;
 
-        Weather w = getWeather(apiKey, city);
+        // Call getWeather and capture raw JSON response for debugging
+        std::string rawResponse;
+        Weather w = getWeather(apiKey, city, &rawResponse);
+
+        // Print raw API response
+        std::cout << "[DEBUG] API Response: " << rawResponse << std::endl;
 
         // Debug print to console
         std::cout << "[INFO] Weather Description: " << w.description << std::endl;
