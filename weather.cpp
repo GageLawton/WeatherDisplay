@@ -11,7 +11,7 @@ static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *use
 }
 
 // Updated getWeather with optional rawResponse output parameter
-Weather getWeather(const std::string& apiKey, const std::string& city, std::string* rawResponse = nullptr) {
+Weather getWeather(const std::string& apiKey, const std::string& city, std::string* rawResponse) {
     CURL* curl;
     CURLcode res;
     std::string readBuffer;
