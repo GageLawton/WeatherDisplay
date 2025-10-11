@@ -8,6 +8,6 @@ struct Weather {
     double tempC;
 };
 
-Weather getWeather(const std::string &apiKey, const std::string &city);
+Weather getWeather(const std::string& apiKey, const std::string& city, std::string* rawResponse = nullptr);
 
 #endif // WEATHER_H
