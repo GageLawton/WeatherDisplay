@@ -18,7 +18,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential g++ libwiringpi-dev libcurl4-openssl-dev
 
-      # Install nlohmann/json
+      # Install nlohmann/json by downloading json.hpp directly
       - name: Install nlohmann/json
         run: |
           mkdir -p /tmp/json
@@ -27,12 +27,13 @@ jobs:
       - name: Verify nlohmann/json file download
         run: |
           ls -l /tmp/json/json.hpp
-          cat /tmp/json/json.hpp | head -n 20  # Display the first 20 lines to confirm content
+          head -n 20 /tmp/json/json.hpp  # Display the first 20 lines to confirm content
 
       - name: Build WeatherDisplay
         run: |
           set -e
-          g++ -o weather main.cpp weather.cpp lcd.cpp -lwiringPi -lcurl -I/tmp/json
+          # Ensure correct include path to json.hpp
+          g++ -o weather main.cpp weather.cpp lcd.cpp -lwiringPi -lcurl -I/tmp/json -std=c++11
           echo "Build completed successfully."
 
       - name: List built files
