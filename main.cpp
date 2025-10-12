@@ -1,19 +1,31 @@
 /*
  * Author: Gage Lawton
  * Date Written: 2025-10-11
- * Last Updated: 2025-10-11
- * Description: This file contains the main application logic for the WeatherDisplay system.
+ * Last Updated: 2025-10-12
+ * Description: Main application logic for the WeatherDisplay system.
  */
 
 #include <wiringPiI2C.h>
 #include <wiringPi.h>
 #include <unistd.h>
 #include <iostream>
+#include <cstdlib>      // for getenv
 #include "lcd.h"
 #include "weather.h"
 
+// Helper to safely load API key from environment
+std::string getApiKey() {
+    const char* key = std::getenv("WEATHER_API_KEY");
+    if (!key) {
+        std::cerr << "[ERROR] WEATHER_API_KEY environment variable not set!" << std::endl;
+        exit(1);
+    }
+    return std::string(key);
+}
+
 int main() {
-    const std::string apiKey = "234a6c0a573a4526bbb53739251110";  // Your WeatherAPI.com key
+    // Load API key from environment
+    std::string apiKey = getApiKey();
     const std::string city = "Westmont, IL"; // Your city or ZIP code
 
     std::cout << "\n[INFO] ==============================" << std::endl;
