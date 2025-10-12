@@ -18,40 +18,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential g++ libwiringpi-dev libcurl4-openssl-dev
 
-      # Install nlohmann/json by downloading json.hpp directly for GitHub Actions
-      - name: Install nlohmann/json (GitHub Actions)
-        run: |
-          mkdir -p /tmp/json
-          curl -L https://github.com/nlohmann/json/releases/download/v3.10.5/json.hpp -o /tmp/json/json.hpp
-        if: runner.os == 'Linux'
-
-      - name: Install nlohmann/json for Raspberry Pi (if not using GitHub Actions)
-        run: |
-          sudo apt-get install -y libnlohmann-json-dev
-        if: runner.os == 'Linux'
-
-      - name: Verify nlohmann/json file download
-        run: |
-          ls -l /tmp/json/json.hpp
-          echo "First 20 lines of json.hpp:"
-          head -n 20 /tmp/json/json.hpp  # Display the first 20 lines to confirm content
-        if: runner.os == 'Linux'
-
-      - name: Verify the json directory
-        run: |
-          echo "Listing the contents of /tmp/json"
-          ls -l /tmp/json  # Ensure json.hpp is in the right directory
-        if: runner.os == 'Linux'
-
-      - name: Build WeatherDisplay with verbose output
+      - name: Build WeatherDisplay
         run: |
           set -e
-          echo "Running g++ with verbose output"
-          if [ -d "/tmp/json" ]; then
-            g++ -v -o weather main.cpp weather.cpp lcd.cpp -lwiringPi -lcurl -I/tmp/json -std=c++11
-          else
-            g++ -v -o weather main.cpp weather.cpp lcd.cpp -lwiringPi -lcurl -std=c++11  # Using the default system path
-          fi
+          echo "Running g++ to build the project"
+          g++ -o weather main.cpp weather.cpp lcd.cpp -lwiringPi -lcurl -I./include -std=c++11
 
       - name: List built files
         run: ls -l weather
