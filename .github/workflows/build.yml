@@ -18,11 +18,16 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential g++ libwiringpi-dev libcurl4-openssl-dev
 
-      # Install nlohmann/json header-only library
+      # Install nlohmann/json
       - name: Install nlohmann/json
         run: |
           mkdir -p /tmp/json
           curl -L https://github.com/nlohmann/json/releases/download/v3.10.5/json.hpp -o /tmp/json/json.hpp
+
+      - name: Verify nlohmann/json file download
+        run: |
+          ls -l /tmp/json/json.hpp
+          cat /tmp/json/json.hpp | head -n 20  # Display the first 20 lines to confirm content
 
       - name: Build WeatherDisplay
         run: |
