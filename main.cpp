@@ -13,20 +13,20 @@
 #include "lcd.h"
 #include "weather.h"
 
-// Helper to safely load API key from environment
-std::string getApiKey() {
-    const char* key = std::getenv("WEATHER_API_KEY");
-    if (!key) {
-        std::cerr << "[ERROR] WEATHER_API_KEY environment variable not set!" << std::endl;
+// Helper to safely load environment variables
+std::string getEnvVar(const std::string& varName) {
+    const char* val = std::getenv(varName.c_str());
+    if (!val) {
+        std::cerr << "[ERROR] Environment variable not set: " << varName << std::endl;
         exit(1);
     }
-    return std::string(key);
+    return std::string(val);
 }
 
 int main() {
-    // Load API key from environment
-    std::string apiKey = getApiKey();
-    const std::string city = "Westmont, IL"; // Your city or ZIP code
+    // Load API key and location from environment
+    std::string apiKey = getEnvVar("WEATHER_API_KEY");
+    std::string city   = getEnvVar("WEATHER_LOCATION");
 
     std::cout << "\n[INFO] ==============================" << std::endl;
     std::cout << "[INFO] Starting WeatherDisplay" << std::endl;
@@ -53,7 +53,7 @@ int main() {
         std::cout << "[DEBUG] Description : " << w.description << std::endl;
         std::cout << "[DEBUG] Temperature  : " << w.tempC << " °C / " << tempF << " °F" << std::endl;
 
-        // Optional: show raw JSON (comment out if noisy)
+        // Optional: show raw JSON
         std::cout << "[DEBUG] Raw API JSON : " << rawResponse << std::endl;
 
         // Prepare LCD display strings

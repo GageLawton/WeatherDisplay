@@ -3,11 +3,16 @@ name: Build WeatherDisplay on PR
 on:
   pull_request:
     branches:
-      - '**'  # This will trigger for PRs to any branch
+      - '**'  # Trigger for PRs to any branch
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    env:
+      # Inject your API key from repository secrets (set in GitHub Settings > Secrets > Actions)
+      WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
+      WEATHER_LOCATION: ${{ vars.WEATHER_LOCATION }}
 
     steps:
       - name: Checkout repository
@@ -21,8 +26,17 @@ jobs:
       - name: Build WeatherDisplay
         run: |
           set -e
-          echo "Running g++ to build the project"
+          echo "[INFO] Building WeatherDisplay..."
           g++ -o weather main.cpp weather.cpp lcd.cpp -lwiringPi -lcurl -I./include -std=c++11
+
+      - name: Verify environment variable (masked)
+        run: |
+          if [ -z "$WEATHER_API_KEY" ]; then
+            echo "::error::WEATHER_API_KEY is not set. Please configure it in repo settings."
+            exit 1
+          else
+            echo "[INFO] WEATHER_API_KEY detected (value is masked in logs)."
+          fi
 
       - name: List built files
         run: ls -l weather
