@@ -27,14 +27,19 @@ jobs:
       - name: Verify nlohmann/json file download
         run: |
           ls -l /tmp/json/json.hpp
+          echo "First 20 lines of json.hpp:"
           head -n 20 /tmp/json/json.hpp  # Display the first 20 lines to confirm content
 
-      - name: Build WeatherDisplay
+      - name: Verify the json directory
+        run: |
+          echo "Listing the contents of /tmp/json"
+          ls -l /tmp/json  # Ensure json.hpp is in the right directory
+
+      - name: Build WeatherDisplay with verbose output
         run: |
           set -e
-          # Ensure correct include path to json.hpp
-          g++ -o weather main.cpp weather.cpp lcd.cpp -lwiringPi -lcurl -I/tmp/json -std=c++11
-          echo "Build completed successfully."
+          echo "Running g++ with verbose output"
+          g++ -v -o weather main.cpp weather.cpp lcd.cpp -lwiringPi -lcurl -I/tmp/json -std=c++11
 
       - name: List built files
         run: ls -l weather
