@@ -1,4 +1,10 @@
 #!/bin/bash
+#
+# Author: Gage Lawton
+# Date Written: 2025-10-11
+# Last Updated: 2025-10-11
+# Description: Script to install and configure the WeatherDisplay service.
+
 
 SERVICE_NAME="weather-display.service"
 SERVICE_PATH="./systemd/$SERVICE_NAME"

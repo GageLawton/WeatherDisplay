@@ -1,3 +1,10 @@
+/*
+ * Author: Gage Lawton
+ * Date Written: 2025-10-11
+ * Last Updated: 2025-10-11
+ * Description: This file contains the main application logic for the WeatherDisplay system.
+ */
+
 #include <wiringPiI2C.h>
 #include <wiringPi.h>
 #include <unistd.h>
