@@ -6,11 +6,14 @@
 
 set -euo pipefail
 
+# Resolve script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Paths
-BINARY_PATH="./weather"
-SOURCE_FILES=("main.cpp" "weather.cpp" "lcd.cpp" "config.cpp")
+BINARY_PATH="$SCRIPT_DIR/weather"
+SOURCE_FILES=("$SCRIPT_DIR/main.cpp" "$SCRIPT_DIR/weather.cpp" "$SCRIPT_DIR/lcd.cpp" "$SCRIPT_DIR/config.cpp")
 SERVICE_NAME="weather-display.service"
-SERVICE_PATH="./systemd/$SERVICE_NAME"
+SERVICE_PATH="$SCRIPT_DIR/systemd/$SERVICE_NAME"
 SYSTEMD_DIR="/etc/systemd/system"
 
 # Colors
@@ -54,7 +57,7 @@ fi
 
 # Step 1: Build binary
 info "🛠️ Compiling WeatherDisplay binary..."
-g++ -Wall -O2 -std=c++11 -I./include "${SOURCE_FILES[@]}" -lwiringPi -lcurl -o "$BINARY_PATH"
+g++ -Wall -O2 -std=c++11 -I"$SCRIPT_DIR/include" "${SOURCE_FILES[@]}" -lwiringPi -lcurl -o "$BINARY_PATH"
 chmod +x "$BINARY_PATH"
 success "✅ Binary compiled successfully: $BINARY_PATH"
 
