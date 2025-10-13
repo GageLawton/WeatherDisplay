@@ -35,6 +35,11 @@ if [ "$EUID" -ne 0 ]; then
     warning "You are not running as root. You may be prompted for your password."
 fi
 
+# Step 0: Install build dependencies
+info "📦 Installing build dependencies (g++, libcurl, wiringPi)..."
+sudo apt-get update
+sudo apt-get install -y g++ libcurl4-openssl-dev wiringpi
+
 # Step 1: Build binary
 info "🛠️ Compiling WeatherDisplay binary..."
 g++ -Wall -O2 -std=c++11 -I./include "${SOURCE_FILES[@]}" -lwiringPi -lcurl -o "$BINARY_PATH"
