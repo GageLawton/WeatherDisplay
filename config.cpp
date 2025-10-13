@@ -7,7 +7,7 @@
 void Config::load(const std::string& filePath) {
     // Start with hardcoded defaults (used only if neither secret nor config exists)
     apiKey = "default_api_key";
-    location = "New York,US";
+    location = "Westmont, IL";
     units = "F";
     updateInterval = 600;
 
@@ -34,5 +34,5 @@ void Config::load(const std::string& filePath) {
 
     // 3️⃣ Final check: ensure no empty values remain
     if (apiKey.empty()) apiKey = "default_api_key";
-    if (location.empty()) location = "New York,US";
+    if (location.empty()) location = "Westmont, IL";
 }
