@@ -27,8 +27,9 @@ jobs:
         run: |
           set -e
           echo "[INFO] Building WeatherDisplay..."
-          g++ -o weather main.cpp weather.cpp lcd.cpp -lwiringPi -lcurl -I./include -std=c++11
-
+          g++ -Wall -O2 -o weather *.cpp -lwiringPi -lcurl -I./include -std=c++11
+          echo "[INFO] Build completed."
+          
       - name: Verify environment variable (masked)
         run: |
           if [ -z "$WEATHER_API_KEY" ]; then
