@@ -1,60 +1,75 @@
 #!/bin/bash
+#
+# Author: Gage Lawton
+# Date Written: 2025-10-12
+# Description: Build WeatherDisplay and install it as a systemd service directly on the Raspberry Pi.
+
 set -euo pipefail
 
-# Colors for output
+# Paths
+BINARY_PATH="./weather"
+SOURCE_FILES=("main.cpp" "weather.cpp" "lcd.cpp" "config.cpp")
+SERVICE_NAME="weather-display.service"
+SERVICE_PATH="./systemd/$SERVICE_NAME"
+SYSTEMD_DIR="/etc/systemd/system"
+
+# Colors
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
-IMAGE_NAME="weather-display"
-TEMP_CONTAINER="weather-temp"
-BINARY_PATH="./weather"
+NC='\033[0m'
 
 function info() { echo -e "${BLUE}[INFO]${NC} $1"; }
 function success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
 function warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
-function error() { echo -e "${RED}[ERROR]${NC} $1" >&2; }
+function error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
-# Cleanup function
-function cleanup {
-    if podman container exists "$TEMP_CONTAINER"; then
-        warning "Cleaning up temporary container..."
-        podman rm -f "$TEMP_CONTAINER" >/dev/null 2>&1 || true
-    fi
-}
-trap cleanup EXIT
-
-# Verify environment variables exist
+# Ensure required environment variables exist
 if [ -z "${WEATHER_API_KEY:-}" ] || [ -z "${WEATHER_LOCATION:-}" ]; then
-    error "WEATHER_API_KEY or WEATHER_LOCATION is not set on the Pi. Please export them before running."
+    warning "WEATHER_API_KEY or WEATHER_LOCATION not set. Service may fail to fetch weather."
+fi
+
+# Check if running as root
+if [ "$EUID" -ne 0 ]; then
+    warning "You are not running as root. You may be prompted for your password."
+fi
+
+# Step 1: Build binary
+info "🛠️ Compiling WeatherDisplay binary..."
+g++ -Wall -O2 -std=c++11 -I./include "${SOURCE_FILES[@]}" -lwiringPi -lcurl -o "$BINARY_PATH"
+chmod +x "$BINARY_PATH"
+success "✅ Binary compiled successfully: $BINARY_PATH"
+
+# Step 2: Verify service file exists
+if [ ! -f "$SERVICE_PATH" ]; then
+    error "Service file $SERVICE_NAME not found in $SERVICE_PATH."
     exit 1
 fi
 
-info "🔧 Starting WeatherDisplay build and deployment script"
+# Step 3: Copy service file
+info "📁 Copying $SERVICE_NAME to $SYSTEMD_DIR..."
+sudo cp "$SERVICE_PATH" "$SYSTEMD_DIR"
+sudo chmod 644 "$SYSTEMD_DIR/$SERVICE_NAME"
 
-# Step 1: Build container
-info "🛠️ Building the container image '$IMAGE_NAME'..."
-podman build -t "$IMAGE_NAME" .
+# Step 4: Inject environment variables
+info "🔧 Injecting environment variables into service..."
+sudo sed -i "/^ExecStart=/i Environment=\"WEATHER_API_KEY=${WEATHER_API_KEY}\"" "$SYSTEMD_DIR/$SERVICE_NAME"
+sudo sed -i "/^ExecStart=/i Environment=\"WEATHER_LOCATION=${WEATHER_LOCATION}\"" "$SYSTEMD_DIR/$SERVICE_NAME"
 
-# Step 2: Run container temporarily to compile binary
-info "📦 Creating temporary container '$TEMP_CONTAINER' to build binary..."
-podman create --name "$TEMP_CONTAINER" \
-    -e WEATHER_API_KEY="$WEATHER_API_KEY" \
-    -e WEATHER_LOCATION="$WEATHER_LOCATION" \
-    "$IMAGE_NAME"
+# Step 5: Reload systemd and enable service
+info "🔄 Reloading systemd daemon..."
+sudo systemctl daemon-reexec
+sudo systemctl daemon-reload
+info "✅ Enabling service to start on boot..."
+sudo systemctl enable "$SERVICE_NAME"
 
-# Step 3: Copy binary out of container
-info "📤 Copying binary from container to host at '$BINARY_PATH'..."
-podman cp "$TEMP_CONTAINER:/app/weather" "$BINARY_PATH"
+# Step 6: Start/restart service
+info "🚀 Starting $SERVICE_NAME..."
+sudo systemctl restart "$SERVICE_NAME"
 
-# Step 4: Remove temporary container
-info "🧹 Removing temporary container..."
-podman rm -f "$TEMP_CONTAINER" >/dev/null
+# Step 7: Show service status
+info "📋 Service status:"
+sudo systemctl status "$SERVICE_NAME" --no-pager
 
-# Step 5: Make binary executable
-info "✅ Setting executable permissions on '$BINARY_PATH'..."
-chmod +x "$BINARY_PATH"
-
-success "🎉 WeatherDisplay binary is ready and compiled with Pi environment variables!"
+success "🎉 WeatherDisplay build and service installation complete!"
