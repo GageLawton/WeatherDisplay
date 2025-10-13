@@ -1,71 +1,51 @@
-/*
- * Author: Gage Lawton
- * Date Written: 2025-10-11
- * Last Updated: 2025-10-12
- * Description: Main application logic for the WeatherDisplay system.
- */
-
+#include "config.h"
+#include "lcd.h"
+#include "weather.h"
 #include <wiringPiI2C.h>
 #include <wiringPi.h>
 #include <unistd.h>
 #include <iostream>
-#include <cstdlib>      // for getenv
-#include "lcd.h"
-#include "weather.h"
-
-// Helper to safely load environment variables
-std::string getEnvVar(const std::string& varName) {
-    const char* val = std::getenv(varName.c_str());
-    if (!val) {
-        std::cerr << "[ERROR] Environment variable not set: " << varName << std::endl;
-        exit(1);
-    }
-    return std::string(val);
-}
 
 int main() {
-    // Load API key and location from environment
-    std::string apiKey = getEnvVar("WEATHER_API_KEY");
-    std::string city   = getEnvVar("WEATHER_LOCATION");
+    Config cfg;
+    cfg.load("config.json");
 
-    std::cout << "\n[INFO] ==============================" << std::endl;
+    std::cout << "[INFO] ==============================" << std::endl;
     std::cout << "[INFO] Starting WeatherDisplay" << std::endl;
-    std::cout << "[INFO] Location: " << city << std::endl;
-    std::cout << "[INFO] Units: Fahrenheit (°F)" << std::endl;
+    std::cout << "[INFO] Location: " << cfg.location << std::endl;
+    std::cout << "[INFO] Units: " << cfg.units << std::endl;
+    std::cout << "[INFO] Update interval: " << cfg.updateInterval << " seconds" << std::endl;
     std::cout << "[INFO] ==============================\n" << std::endl;
 
-    int fd = wiringPiI2CSetup(0x27); // Use your actual LCD I2C address
+    // Setup LCD
+    int fd = wiringPiI2CSetup(0x27); // Adjust I2C address
     if (fd < 0) {
         std::cerr << "[ERROR] Failed to open I2C bus!" << std::endl;
         return 1;
     }
-
     lcd_init(fd);
 
     while (true) {
-        std::cout << "\n[DEBUG] ---- Fetching weather data ----" << std::endl;
+        std::cout << "[DEBUG] ---- Fetching weather data ----" << std::endl;
 
         std::string rawResponse;
-        Weather w = getWeather(apiKey, city, &rawResponse);
+        Weather w = getWeather(cfg.apiKey, cfg.location, &rawResponse);
 
-        float tempF = (w.tempC * 9.0f / 5.0f) + 32.0f;
+        float temp = (cfg.units == "F") ? (w.tempC * 9.0f / 5.0f) + 32.0f : w.tempC;
 
         std::cout << "[DEBUG] Description : " << w.description << std::endl;
-        std::cout << "[DEBUG] Temperature  : " << w.tempC << " °C / " << tempF << " °F" << std::endl;
+        std::cout << "[DEBUG] Temperature  : " << w.tempC << " °C / " 
+                  << temp << " " << cfg.units << std::endl;
 
-        // Optional: show raw JSON
-        std::cout << "[DEBUG] Raw API JSON : " << rawResponse << std::endl;
-
-        // Prepare LCD display strings
-        std::string line1 = "Temp: " + std::to_string((int)tempF) + "F";
+        std::string line1 = "Temp: " + std::to_string((int)temp) + cfg.units;
         std::string line2 = w.description.substr(0, 16);
 
         lcd_display(fd, line1, line2);
 
         std::cout << "[INFO] Display updated: [" << line1 << "] / [" << line2 << "]" << std::endl;
-        std::cout << "[INFO] Sleeping for 10 minutes...\n" << std::endl;
+        std::cout << "[INFO] Sleeping for " << cfg.updateInterval << " seconds...\n" << std::endl;
 
-        sleep(600); // 10 minutes
+        sleep(cfg.updateInterval);
     }
 
     return 0;
