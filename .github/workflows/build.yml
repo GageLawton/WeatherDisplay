@@ -40,3 +40,11 @@ jobs:
 
       - name: List built files
         run: ls -l weather
+
+      - name: Upload Weather Binary
+        uses: actions/upload-artifact@v4 
+        with:
+          name: weather-${{ github.run_number }} # Unique name for the artifact
+          path: ./weather # Path to the built binary
+          retention-days: 7 # Retain artifact for 7 days
+ 
