@@ -2,7 +2,7 @@
 #include <fstream>
 #include <cstdlib>
 #include <iostream>
-#include <include/json.hpp>
+#include "json.hpp" // Include nlohmann/json library
 
 void Config::load(const std::string& filePath) {
     // Start with hardcoded defaults (used only if neither secret nor config exists)
