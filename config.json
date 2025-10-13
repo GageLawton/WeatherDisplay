@@ -1,0 +1,6 @@
+{
+  "WEATHER_API_KEY": "your_api_key_here",
+  "WEATHER_LOCATION": "New York,US",
+  "UNITS": "F",
+  "UPDATE_INTERVAL": 300
+}

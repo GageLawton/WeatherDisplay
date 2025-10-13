@@ -27,7 +27,8 @@ jobs:
         run: |
           set -e
           echo "[INFO] Building WeatherDisplay..."
-          g++ -o weather main.cpp weather.cpp lcd.cpp -lwiringPi -lcurl -I./include -std=c++11
+          g++ -o weather main.cpp weather.cpp lcd.cpp config.cpp -I./include -lwiringPi -lcurl -std=c++11
+          echo "[INFO] Build completed."
 
       - name: Verify environment variable (masked)
         run: |
