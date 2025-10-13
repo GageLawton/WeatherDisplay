@@ -36,9 +36,21 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # Step 0: Install build dependencies
-info "📦 Installing build dependencies (g++, libcurl, wiringPi)..."
+info "📦 Installing build dependencies (g++, libcurl)..."
 sudo apt-get update
-sudo apt-get install -y g++ libcurl4-openssl-dev wiringpi
+sudo apt-get install -y g++ libcurl4-openssl-dev git
+
+# Step 0b: Install WiringPi manually if not present
+if ! command -v gpio &> /dev/null; then
+    info "📦 Installing WiringPi manually..."
+    git clone https://github.com/WiringPi/WiringPi.git /tmp/WiringPi
+    cd /tmp/WiringPi
+    ./build
+    cd ~
+    rm -rf /tmp/WiringPi
+else
+    info "✅ WiringPi already installed."
+fi
 
 # Step 1: Build binary
 info "🛠️ Compiling WeatherDisplay binary..."
