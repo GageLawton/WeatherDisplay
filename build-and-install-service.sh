@@ -72,7 +72,7 @@ SSD1306_SRC="$SCRIPT_DIR/include/external/ssd1306"
 if [ ! -d "$SSD1306_SRC" ]; then
     info "📥 Cloning SSD1306 library from GitHub..."
     mkdir -p "$SSD1306_SRC"
-    git clone https://github.com/DevAmitKumar/ssd1306.git "$SSD1306_SRC"
+    git clone https://github.com/adafruit/Adafruit_SSD1306.git "$SSD1306_SRC"
 else
     info "✅ SSD1306 library already present."
 fi
@@ -88,10 +88,8 @@ g++ -Wall -O2 -std=c++17 \
     "$SCRIPT_DIR/lcd.cpp" \
     "$SCRIPT_DIR/weather.cpp" \
     "$SCRIPT_DIR/oled.cpp" \
-    "$SSD1306_SRC/ssd1306_console.cpp" \
-    "$SSD1306_SRC/ssd1306_fonts.cpp" \
-    "$SSD1306_SRC/ssd1306_i2c.cpp" \
-    "$SSD1306_SRC/ssd1306_oled.cpp" \
+    "$SSD1306_SRC/Adafruit_SSD1306.cpp" \
+    "$SSD1306_SRC/Adafruit_SSD1306.h" \
     -lwiringPi -lcurl -lpthread -o "$BINARY_PATH"
 
 chmod +x "$BINARY_PATH"
@@ -111,22 +109,4 @@ sudo chmod 644 "$SYSTEMD_DIR/$SERVICE_NAME"
 # Step 5: Inject environment variables into systemd unit safely
 info "🔧 Injecting environment variables into systemd unit..."
 sudo sed -i "/^ExecStart=/i Environment=\"WEATHER_API_KEY=${WEATHER_API_KEY//&/\\&}\"" "$SYSTEMD_DIR/$SERVICE_NAME"
-sudo sed -i "/^ExecStart=/i Environment=\"WEATHER_LOCATION=${WEATHER_LOCATION//&/\\&}\"" "$SYSTEMD_DIR/$SERVICE_NAME"
-
-# Step 6: Reload systemd daemon & enable service on boot
-info "🔄 Reloading systemd daemon..."
-sudo systemctl daemon-reexec
-sudo systemctl daemon-reload
-
-info "✅ Enabling service to start on boot..."
-sudo systemctl enable "$SERVICE_NAME"
-
-# Step 7: Start or restart the service
-info "🚀 Starting service..."
-sudo systemctl restart "$SERVICE_NAME"
-
-# Step 8: Show service status
-info "📋 Service status:"
-sudo systemctl status "$SERVICE_NAME" --no-pager
-
-success "🎉 WeatherDisplay local build & install complete!"
+sudo sed -i "/^ExecStart=/i Environment=\"WEATHER_LOCATION=${WEATHER_LOCATION//&
