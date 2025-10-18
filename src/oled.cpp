@@ -2,7 +2,7 @@
 #include <chrono>
 #include <ctime>
 #include <thread>
-#include "ssd1306.h"
+#include "Adafruit_SSD1306.h"
 
 SSD1306 display;
 
