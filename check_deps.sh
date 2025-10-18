@@ -77,21 +77,31 @@ else
     info "✅ SSD1306_OLED_RPI library already present."
 fi
 
-# Step 2: Compile WeatherDisplay binary (with local OLED support)
+# Check if the library has the necessary source files
+if [ ! -f "$SSD1306_SRC/Adafruit_SSD1306.h" ]; then
+    error "SSD1306_OLED_RPI library missing necessary header files."
+    exit 1
+fi
+
+# Step 2: Compile WeatherDisplay binary with local OLED support
 info "🛠️ Compiling WeatherDisplay binary with local OLED support..."
 
 g++ -Wall -O2 -std=c++17 \
     -I"$SCRIPT_DIR/include" \
-    -I"$SCRIPT_DIR/include/external/ssd1306_oled_rpi" \  # Ensure this is correct
+    -I"$SSD1306_SRC" \
     "$SCRIPT_DIR/src/main.cpp" \
     "$SCRIPT_DIR/src/config.cpp" \
     "$SCRIPT_DIR/src/lcd.cpp" \
     "$SCRIPT_DIR/src/weather.cpp" \
     "$SCRIPT_DIR/src/oled.cpp" \
-    "$SCRIPT_DIR/include/external/ssd1306_oled_rpi/Adafruit_SSD1306.cpp" \  # Link the .cpp explicitly
+    "$SSD1306_SRC/Adafruit_SSD1306.cpp" \  # Include the necessary .cpp file
     -lwiringPi -lcurl -lpthread -o "$BINARY_PATH" \
-    -L"$SCRIPT_DIR/include/external/ssd1306_oled_rpi" -lssd1306_oled_rpi  # Ensure the path to .a file is included
+    -L"$SSD1306_SRC" -lssd1306_oled_rpi  # Ensure linking to the correct library
 
+if [ $? -ne 0 ]; then
+    error "Compilation failed!"
+    exit 1
+fi
 
 chmod +x "$BINARY_PATH"
 success "✅ Binary compiled: $BINARY_PATH"
