@@ -64,31 +64,33 @@ else
     info "✅ WiringPi already installed."
 fi
 
-# Step 1: Fetch SSD1306 library
-info "📦 Fetching SSD1306 library..."
-SSD1306_DIR="$SCRIPT_DIR/include/external/ssd1306"
+# Step 1: Fetch SSD1306_OLED_RPI Library
+info "📦 Fetching SSD1306_OLED_RPI library..."
+SSD1306_SRC="$SCRIPT_DIR/include/external/ssd1306_oled_rpi"
 
-# If the SSD1306 directory doesn't exist, clone it
-if [ ! -d "$SSD1306_DIR" ]; then
-    info "📥 Cloning SSD1306 library from GitHub..."
-    git clone https://github.com/adafruit/Adafruit_SSD1306.git "$SSD1306_DIR"
+# If the SSD1306_OLED_RPI directory doesn't exist, clone it
+if [ ! -d "$SSD1306_SRC" ]; then
+    info "📥 Cloning SSD1306_OLED_RPI library from GitHub..."
+    mkdir -p "$SSD1306_SRC"
+    git clone https://github.com/gavinlyonsrepo/SSD1306_OLED_RPI.git "$SSD1306_SRC"
 else
-    info "✅ SSD1306 library already present."
+    info "✅ SSD1306_OLED_RPI library already present."
 fi
 
-# Step 2: Compile WeatherDisplay binary
+# Step 2: Compile WeatherDisplay binary (with local OLED support)
 info "🛠️ Compiling WeatherDisplay binary with local OLED support..."
 
 g++ -Wall -O2 -std=c++17 \
     -I"$SCRIPT_DIR/include" \
-    -I"$SSD1306_DIR" \
+    -I"$SSD1306_SRC" \  # Correct path to SSD1306_OLED_RPI header files
     "$SCRIPT_DIR/src/main.cpp" \
     "$SCRIPT_DIR/src/config.cpp" \
     "$SCRIPT_DIR/src/lcd.cpp" \
     "$SCRIPT_DIR/src/weather.cpp" \
     "$SCRIPT_DIR/src/oled.cpp" \
-    "$SSD1306_DIR/Adafruit_SSD1306.cpp" \
-    -lwiringPi -lcurl -lpthread -o "$BINARY_PATH"
+    "$SSD1306_SRC/SSD1306.cpp" \  # Correct path to SSD1306_OLED_RPI .cpp files
+    -lwiringPi -lcurl -lpthread -o "$BINARY_PATH" \
+    -L"$SSD1306_SRC/build" -lssd1306_oled_rpi  # Linking SSD1306_OLED_RPI static library
 
 chmod +x "$BINARY_PATH"
 success "✅ Binary compiled: $BINARY_PATH"

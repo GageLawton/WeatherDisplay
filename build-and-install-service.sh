@@ -2,7 +2,7 @@
 #
 # Author: Gage Lawton
 # Updated: 2025-10-17
-# Description: Build WeatherDisplay (LCD + OLED) and install it as a systemd service using local SSD1306 library.
+# Description: Build WeatherDisplay (LCD + OLED) and install it as a systemd service using local SSD1306_OLED_RPI library.
 
 set -euo pipefail
 
@@ -64,32 +64,39 @@ else
     info "✅ WiringPi already installed."
 fi
 
-# Step 1: Fetch SSD1306 Library
-info "📦 Fetching SSD1306 library..."
-SSD1306_SRC="$SCRIPT_DIR/include/external/ssd1306"
+# Step 1: Fetch SSD1306_OLED_RPI Library
+info "📦 Fetching SSD1306_OLED_RPI library..."
+SSD1306_SRC="$SCRIPT_DIR/include/external/ssd1306_oled_rpi"
 
-# Check if SSD1306 folder exists; if not, clone from the repo
+# Check if SSD1306_OLED_RPI folder exists; if not, clone from the repo
 if [ ! -d "$SSD1306_SRC" ]; then
-    info "📥 Cloning SSD1306 library from GitHub..."
+    info "📥 Cloning SSD1306_OLED_RPI library from GitHub..."
     mkdir -p "$SSD1306_SRC"
-    git clone https://github.com/adafruit/Adafruit_SSD1306.git "$SSD1306_SRC"
+    git clone https://github.com/gavinlyonsrepo/SSD1306_OLED_RPI.git "$SSD1306_SRC"
 else
-    info "✅ SSD1306 library already present."
+    info "✅ SSD1306_OLED_RPI library already present."
 fi
 
-# Step 2: Build WeatherDisplay binary (with local SSD1306 source)
+# Step 2: Build WeatherDisplay binary (with local SSD1306_OLED_RPI source)
 info "🛠️ Compiling WeatherDisplay binary with local OLED support..."
 
 g++ -Wall -O2 -std=c++17 \
     -I"$SCRIPT_DIR/include" \
-    -I"$SCRIPT_DIR/include/external/Adafruit_SSD1306" \  # Correct path to Adafruit_SSD1306 header files
+    -I"$SCRIPT_DIR/include/external/ssd1306_oled_rpi" \  # Correct path to SSD1306_OLED_RPI header files
     "$SCRIPT_DIR/main.cpp" \
     "$SCRIPT_DIR/config.cpp" \
     "$SCRIPT_DIR/lcd.cpp" \
     "$SCRIPT_DIR/weather.cpp" \
     "$SCRIPT_DIR/oled.cpp" \
-    "$SCRIPT_DIR/include/external/Adafruit_SSD1306/Adafruit_SSD1306.cpp" \  # Correct path to .cpp files
-    -lwiringPi -lcurl -lpthread -o "$BINARY_PATH"
+    "$SCRIPT_DIR/include/external/ssd1306_oled_rpi/SSD1306.cpp" \  # Correct path to .cpp files
+    -lwiringPi -lcurl -lpthread -o "$BINARY_PATH" \
+    -L"$SCRIPT_DIR/include/external/ssd1306_oled_rpi/build" -lssd1306_oled_rpi  # Linking SSD1306_OLED_RPI static library
+
+# Check if the binary was created
+if [ ! -f "$BINARY_PATH" ]; then
+    error "Binary not found at $BINARY_PATH. Compilation may have failed."
+    exit 1
+fi
 
 chmod +x "$BINARY_PATH"
 success "✅ Binary compiled: $BINARY_PATH"
@@ -123,7 +130,7 @@ info "🚀 Starting service..."
 sudo systemctl restart "$SERVICE_NAME"
 
 # Step 8: Show service status
-info "📋 Service status:"
-sudo systemctl status "$SERVICE_NAME" --no-pager
+info "📋 Checking service status..."
+sudo systemctl status "$SERVICE_NAME" --no-pager || error "Service failed to start"
 
 success "🎉 WeatherDisplay local build & install complete!"

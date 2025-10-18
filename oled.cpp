@@ -4,14 +4,9 @@
 #include <thread>
 #include "ssd1306.h"
 
-int main() {
-    SSD1306 display;
+SSD1306 display;
 
-    if (!display.init()) {
-        std::cerr << "OLED initialization failed!" << std::endl;
-        return 1;
-    }
-
+void showTime() {
     while (true) {
         // Clear the display buffer
         display.clear();
@@ -31,8 +26,23 @@ int main() {
         // Update the physical display
         display.display();
 
+        // Sleep for 1 second
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
+}
+
+int main() {
+    // Initialize the display
+    if (!display.init()) {
+        std::cerr << "OLED initialization failed!" << std::endl;
+        return 1;
+    }
+
+    // Start the time display in a separate thread
+    std::thread timeThread(showTime);
+
+    // Join the timeThread (it will run indefinitely)
+    timeThread.join();
 
     return 0;
 }

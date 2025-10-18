@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <iostream>
 #include "oled.h"
+#include <thread> // For threading support
 
 int main() {
     Config cfg;
@@ -26,7 +27,8 @@ int main() {
     }
     lcd_init(fd);
 
-    startOLEDClock(); // Start the OLED clock display thread
+    // Start the OLED clock display in a separate thread
+    std::thread oledThread(startOLEDClock);
 
     while (true) {
         std::cout << "[DEBUG] ---- Fetching weather data ----" << std::endl;
@@ -34,14 +36,21 @@ int main() {
         std::string rawResponse;
         Weather w = getWeather(cfg.apiKey, cfg.location, &rawResponse);
 
+        if (w.tempC == -9999.0) {  // In case of error fetching weather data
+            std::cerr << "[ERROR] Failed to fetch weather data!" << std::endl;
+            continue;  // Skip this iteration and try again after the update interval
+        }
+
+        // Convert Celsius to requested units (Fahrenheit or Celsius)
         float temp = (cfg.units == "F") ? (w.tempC * 9.0f / 5.0f) + 32.0f : w.tempC;
 
         std::cout << "[DEBUG] Description : " << w.description << std::endl;
         std::cout << "[DEBUG] Temperature  : " << w.tempC << " °C / " 
                   << temp << " " << cfg.units << std::endl;
 
+        // Prepare display content for LCD and OLED
         std::string line1 = "Temp: " + std::to_string((int)temp) + cfg.units;
-        std::string line2 = w.description.substr(0, 16);
+        std::string line2 = w.description.substr(0, 16); // Shorten description if necessary
 
         lcd_display(fd, line1, line2);
 
@@ -50,6 +59,9 @@ int main() {
 
         sleep(cfg.updateInterval);
     }
+
+    // Join the OLED thread before exiting
+    oledThread.join();
 
     return 0;
 }

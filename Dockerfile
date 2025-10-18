@@ -34,9 +34,10 @@ RUN git clone https://github.com/gavinlyonsrepo/SSD1306_OLED_RPI.git /tmp/ssd130
     mkdir -p /tmp/ssd1306/build && \
     cd /tmp/ssd1306/build && \
     cmake .. && \
-    make
+    make && \
+    ls -lh /tmp/ssd1306/build  # Verify library exists
 
-# Step: Compile your app linking to the SSD1306 static library
+# Step: Compile your app linking to the SSD1306 static library and other necessary files
 RUN g++ -Wall -O2 -std=c++17 \
     -I"/app/include" \
     -I"/tmp/ssd1306" \
@@ -46,7 +47,7 @@ RUN g++ -Wall -O2 -std=c++17 \
     "/app/weather.cpp" \
     "/app/oled.cpp" \
     -L/tmp/ssd1306/build \
-    -lssd1306_oled_rpi \  # Link the library, assuming the build generates libssd1306_oled_rpi.a or .so
+    -lssd1306_oled_rpi \  # Link the SSD1306 library (assumes static library or .so)
     -lwiringPi -lcurl -lpthread -o "/app/weather"
 
 # Make sure the binary is executable
