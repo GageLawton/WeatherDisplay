@@ -5,6 +5,7 @@
 #include <wiringPi.h>
 #include <unistd.h>
 #include <iostream>
+#include "oled.h"
 
 int main() {
     Config cfg;
@@ -24,6 +25,8 @@ int main() {
         return 1;
     }
     lcd_init(fd);
+
+    startOLEDClock(); // Start the OLED clock display thread
 
     while (true) {
         std::cout << "[DEBUG] ---- Fetching weather data ----" << std::endl;
