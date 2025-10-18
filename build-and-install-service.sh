@@ -2,7 +2,7 @@
 #
 # Author: Gage Lawton
 # Updated: 2025-10-17
-# Description: Build WeatherDisplay (LCD + OLED) and install it as a systemd service using local SSD1306 library.
+# Description: Build WeatherDisplay (LCD + OLED) and install it as a systemd service using local SSD1306_OLED_RPI library.
 
 set -euo pipefail
 
@@ -64,17 +64,17 @@ else
     info "✅ WiringPi already installed."
 fi
 
-# Step 1: Fetch SSD1306 Library
-info "📦 Fetching SSD1306 library..."
+# Step 1: Fetch SSD1306_OLED_RPI Library
+info "📦 Fetching SSD1306_OLED_RPI library..."
 SSD1306_SRC="$SCRIPT_DIR/include/external/ssd1306"
 
 # Check if SSD1306 folder exists; if not, clone from the repo
 if [ ! -d "$SSD1306_SRC" ]; then
-    info "📥 Cloning SSD1306 library from GitHub..."
+    info "📥 Cloning SSD1306_OLED_RPI library from GitHub..."
     mkdir -p "$SSD1306_SRC"
-    git clone https://github.com/adafruit/Adafruit_SSD1306.git "$SSD1306_SRC"
+    git clone https://github.com/gavinlyonsrepo/SSD1306_OLED_RPI.git "$SSD1306_SRC"
 else
-    info "✅ SSD1306 library already present."
+    info "✅ SSD1306_OLED_RPI library already present."
 fi
 
 # Step 2: Build WeatherDisplay binary (with local SSD1306 source)
@@ -82,13 +82,13 @@ info "🛠️ Compiling WeatherDisplay binary with local OLED support..."
 
 g++ -Wall -O2 -std=c++17 \
     -I"$SCRIPT_DIR/include" \
-    -I"$SCRIPT_DIR/include/external/Adafruit_SSD1306" \  # Correct path to Adafruit_SSD1306 header files
+    -I"$SCRIPT_DIR/include/external/ssd1306" \  # Correct path to SSD1306_OLED_RPI headers
     "$SCRIPT_DIR/main.cpp" \
     "$SCRIPT_DIR/config.cpp" \
     "$SCRIPT_DIR/lcd.cpp" \
     "$SCRIPT_DIR/weather.cpp" \
     "$SCRIPT_DIR/oled.cpp" \
-    "$SCRIPT_DIR/include/external/Adafruit_SSD1306/Adafruit_SSD1306.cpp" \  # Correct path to .cpp files
+    "$SCRIPT_DIR/include/external/ssd1306/SSD1306_OLED_RPI.cpp" \  # Correct path to SSD1306_OLED_RPI cpp file
     -lwiringPi -lcurl -lpthread -o "$BINARY_PATH"
 
 chmod +x "$BINARY_PATH"

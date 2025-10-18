@@ -45,7 +45,8 @@ RUN g++ -Wall -O2 -std=c++17 \
     "/app/lcd.cpp" \
     "/app/weather.cpp" \
     "/app/oled.cpp" \
-    "/tmp/ssd1306/build/ssd1306.o" \  # Ensure you use the correct object file or library from the build
+    -L/tmp/ssd1306/build \
+    -lssd1306_oled_rpi \  # Link the library, assuming the build generates libssd1306_oled_rpi.a or .so
     -lwiringPi -lcurl -lpthread -o "/app/weather"
 
 # Make sure the binary is executable
