@@ -107,6 +107,7 @@ g++ -Wall -O2 -std=c++17 \
     -I"$SCRIPT_DIR/include" \
     -I"$SCRIPT_DIR/include/external/ssd1306_oled_rpi" \
     -I"$SCRIPT_DIR/include/external/Adafruit_GFX" \
+    -I"$SCRIPT_DIR/include/external/Adafruit_BusIO" \
     -I/usr/include/nlohmann \
     "$SCRIPT_DIR/src/main.cpp" \
     "$SCRIPT_DIR/src/config.cpp" \
