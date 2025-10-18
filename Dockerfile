@@ -36,20 +36,17 @@ RUN git clone https://github.com/gavinlyonsrepo/SSD1306_OLED_RPI.git /tmp/ssd130
     cmake .. && \
     make
 
-# Compile your app linking to the SSD1306 static library
+# Step: Compile your app linking to the SSD1306 static library
 RUN g++ -Wall -O2 -std=c++17 \
-    -I"$SCRIPT_DIR/include" \
-    -I"$SSD1306_SRC" \
-    "$SCRIPT_DIR/main.cpp" \
-    "$SCRIPT_DIR/config.cpp" \
-    "$SCRIPT_DIR/lcd.cpp" \            # your LCD code
-    "$SCRIPT_DIR/weather.cpp" \
-    "$SCRIPT_DIR/oled.cpp" \           # your OLED wrapper code
-    "$SSD1306_SRC/ssd1306_console.cpp" \
-    "$SSD1306_SRC/ssd1306_fonts.cpp" \
-    "$SSD1306_SRC/ssd1306_i2c.cpp" \
-    "$SSD1306_SRC/ssd1306_oled.cpp" \
-    -lwiringPi -lcurl -lpthread -o "$BINARY_PATH"
+    -I"/app/include" \
+    -I"/tmp/ssd1306" \
+    "/app/main.cpp" \
+    "/app/config.cpp" \
+    "/app/lcd.cpp" \
+    "/app/weather.cpp" \
+    "/app/oled.cpp" \
+    "/tmp/ssd1306/build/ssd1306.o" \  # Ensure you use the correct object file or library from the build
+    -lwiringPi -lcurl -lpthread -o "/app/weather"
 
 # Make sure the binary is executable
 RUN chmod +x /app/weather

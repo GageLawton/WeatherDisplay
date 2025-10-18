@@ -2,7 +2,7 @@
 #
 # Author: Gage Lawton
 # Updated: 2025-10-17
-# Description: Build WeatherDisplay (LCD + OLED) and install it as a systemd service using local ssd1306 library.
+# Description: Build WeatherDisplay (LCD + OLED) and install it as a systemd service using local SSD1306 library.
 
 set -euo pipefail
 
@@ -82,7 +82,7 @@ info "🛠️ Compiling WeatherDisplay binary with local OLED support..."
 
 g++ -Wall -O2 -std=c++17 \
     -I"$SCRIPT_DIR/include" \
-    -I"$SCRIPT_DIR/include/external/Adafruit_SSD1306" \   # Correct path to Adafruit_SSD1306 header files
+    -I"$SCRIPT_DIR/include/external/Adafruit_SSD1306" \  # Correct path to Adafruit_SSD1306 header files
     "$SCRIPT_DIR/main.cpp" \
     "$SCRIPT_DIR/config.cpp" \
     "$SCRIPT_DIR/lcd.cpp" \
@@ -93,7 +93,6 @@ g++ -Wall -O2 -std=c++17 \
 
 chmod +x "$BINARY_PATH"
 success "✅ Binary compiled: $BINARY_PATH"
-
 
 # Step 3: Check service file
 if [ ! -f "$SERVICE_PATH" ]; then
@@ -109,4 +108,22 @@ sudo chmod 644 "$SYSTEMD_DIR/$SERVICE_NAME"
 # Step 5: Inject environment variables into systemd unit safely
 info "🔧 Injecting environment variables into systemd unit..."
 sudo sed -i "/^ExecStart=/i Environment=\"WEATHER_API_KEY=${WEATHER_API_KEY//&/\\&}\"" "$SYSTEMD_DIR/$SERVICE_NAME"
-sudo sed -i "/^ExecStart=/i Environment=\"WEATHER_LOCATION=${WEATHER_LOCATION//&
+sudo sed -i "/^ExecStart=/i Environment=\"WEATHER_LOCATION=${WEATHER_LOCATION//&/\\&}\"" "$SYSTEMD_DIR/$SERVICE_NAME"
+
+# Step 6: Reload systemd daemon & enable service on boot
+info "🔄 Reloading systemd daemon..."
+sudo systemctl daemon-reexec
+sudo systemctl daemon-reload
+
+info "✅ Enabling service to start on boot..."
+sudo systemctl enable "$SERVICE_NAME"
+
+# Step 7: Start or restart the service
+info "🚀 Starting service..."
+sudo systemctl restart "$SERVICE_NAME"
+
+# Step 8: Show service status
+info "📋 Service status:"
+sudo systemctl status "$SERVICE_NAME" --no-pager
+
+success "🎉 WeatherDisplay local build & install complete!"
