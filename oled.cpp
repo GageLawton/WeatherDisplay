@@ -1,5 +1,5 @@
 #include "oled.h"
-#include "ssd1306_i2c.h"
+#include "ssd1306.h"
 #include <nano_gfx.h>
 #include <chrono>
 #include <ctime>
