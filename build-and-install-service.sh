@@ -91,7 +91,6 @@ g++ -Wall -O2 -std=c++17 \
     "$SCRIPT_DIR/include/external/ssd1306_oled_rpi/Adafruit_SSD1306.cpp" \
     -lwiringPi -lcurl -lpthread -o "$BINARY_PATH"
 
-
 # Check if the binary was created
 if [ ! -f "$BINARY_PATH" ]; then
     error "Binary not found at $BINARY_PATH. Compilation may have failed."
