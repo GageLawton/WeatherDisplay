@@ -39,8 +39,9 @@ RUN g++ -Wall -O2 -std=c++17 \
     /app/lcd.cpp \
     /app/weather.cpp \
     /app/oled.cpp \
-    /app/include/external/ssd1306/src/ssd1306_console.cpp \
-    /app/include/external/ssd1306/src/ssd1306_fonts.c \
+    /app/include/external/ssd1306/src/ssd1306_fonts.cpp \
+    /app/include/external/ssd1306/src/ssd1306_i2c.cpp \
+    /app/include/external/ssd1306/src/ssd1306_oled.cpp \
     /app/include/external/ssd1306/src/ssd1306_generic.c \
     /app/include/external/ssd1306/src/ssd1306_hal/linux/platform.c \
     -lwiringPi -lcurl -lpthread -o /app/weather

@@ -19,7 +19,7 @@ int main() {
     std::cout << "[INFO] ==============================\n" << std::endl;
 
     // Setup LCD
-    int fd = wiringPiI2CSetup(0x27); // Adjust I2C address
+    int fd = wiringPiI2CSetup(0x27); // Adjust I2C address if needed
     if (fd < 0) {
         std::cerr << "[ERROR] Failed to open I2C bus!" << std::endl;
         return 1;
