@@ -82,15 +82,15 @@ info "🛠️ Compiling WeatherDisplay binary with local OLED support..."
 
 g++ -Wall -O2 -std=c++17 \
     -I"$SCRIPT_DIR/include" \
-    -I"$SCRIPT_DIR/include/external/ssd1306_oled_rpi" \  # Correct path to SSD1306_OLED_RPI header files
-    "$SCRIPT_DIR/main.cpp" \
-    "$SCRIPT_DIR/config.cpp" \
-    "$SCRIPT_DIR/lcd.cpp" \
-    "$SCRIPT_DIR/weather.cpp" \
-    "$SCRIPT_DIR/oled.cpp" \
-    "$SCRIPT_DIR/include/external/ssd1306_oled_rpi/SSD1306.cpp" \  # Correct path to .cpp files
-    -lwiringPi -lcurl -lpthread -o "$BINARY_PATH" \
-    -L"$SCRIPT_DIR/include/external/ssd1306_oled_rpi/build" -lssd1306_oled_rpi  # Linking SSD1306_OLED_RPI static library
+    -I"$SCRIPT_DIR/include/external/ssd1306_oled_rpi" \
+    "$SCRIPT_DIR/src/main.cpp" \
+    "$SCRIPT_DIR/src/config.cpp" \
+    "$SCRIPT_DIR/src/lcd.cpp" \
+    "$SCRIPT_DIR/src/weather.cpp" \
+    "$SCRIPT_DIR/src/oled.cpp" \
+    "$SCRIPT_DIR/include/external/ssd1306_oled_rpi/Adafruit_SSD1306.cpp" \
+    -lwiringPi -lcurl -lpthread -o "$BINARY_PATH"
+
 
 # Check if the binary was created
 if [ ! -f "$BINARY_PATH" ]; then
