@@ -1,6 +1,6 @@
-#ifdef OLED_H
+#ifndef OLED_H
 #define OLED_H
 
-void start_OLEDClock(); // Launches the backgroud clock thread for the OLED display
+void startOLEDClock(); // Launches the background clock thread for the OLED display
 
 #endif // OLED_H

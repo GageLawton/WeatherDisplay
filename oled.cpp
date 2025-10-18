@@ -1,14 +1,14 @@
 #include "oled.h"
-#include <ssd1306_i2c.h>
+#include "ssd1306_i2c.h"
 #include <nano_gfx.h>
 #include <chrono>
 #include <ctime>
 #include <thread>
 #include <iostream>
 
-void startOLEDClock() {
-    static SSD1306 oled(128, 64);
+static SSD1306 oled(128, 64);
 
+void startOLEDClock() {
     if (!oled.begin(SSD1306_I2C_ADDRESS, -1)) {
         std::cerr << "[ERROR] Failed to initialize OLED clock display!" << std::endl;
         return;
@@ -17,7 +17,7 @@ void startOLEDClock() {
     oled.clear();
     oled.setFont(Font_6x8);
 
-    std::thread([]() mutable {
+    std::thread([&oled]() {
         while (true) {
             oled.clear();
 
@@ -29,7 +29,7 @@ void startOLEDClock() {
             char timeStr[16];
             std::strftime(timeStr, sizeof(timeStr), "%H:%M:%S", ptm);
 
-            // Center text
+            // Center text: 6 pixels width per char * 8 chars
             int x = (128 - 6 * 8) / 2;
             int y = (64 - 8) / 2;
 
@@ -39,5 +39,5 @@ void startOLEDClock() {
 
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
-    }).detach();  // Let it run in the background
+    }).detach();
 }

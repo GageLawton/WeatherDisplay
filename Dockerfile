@@ -36,3 +36,16 @@ WORKDIR /app
 COPY . .
 
 # Compile the WeatherDisplay app with OLED support
+RUN g++ -Wall -O2 -std=c++17 \
+    -Isrc \
+    -Iinclude \
+    -Iinclude/external/ssd1306/src \
+    -Iinclude/external/ssd1306/src/interfaces \
+    src/main.cpp src/weather.cpp src/lcd.cpp src/config.cpp src/oled.cpp \
+    -lwiringPi -lcurl -lssd1306 -lpthread -o weather
+
+# Ensure the binary is executable
+RUN chmod +x weather
+
+# Default command when container runs
+CMD ["./weather"]
