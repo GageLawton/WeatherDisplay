@@ -38,7 +38,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # Step 0: Install build dependencies
-info "📦 Installing build dependencies (g++, curl, cmake, freetype)..."
+info "📦 Installing build dependencies (g++, curl, cmake, freetype, Adafruit_GFX)..."
 sudo apt-get update
 sudo apt-get install -y \
     g++ \
@@ -50,7 +50,16 @@ sudo apt-get install -y \
     libi2c-dev \
     libfreetype6-dev \
     libfontconfig1-dev \
-    libpng-dev
+    libpng-dev \
+    libgpiod-dev  # Ensure GPIO headers are available
+
+# Install Adafruit_GFX library (required by Adafruit_SSD1306)
+info "📦 Installing Adafruit_GFX library..."
+git clone https://github.com/adafruit/Adafruit-GFX-Library.git /tmp/Adafruit-GFX
+cd /tmp/Adafruit-GFX
+sudo make install
+cd ~
+rm -rf /tmp/Adafruit-GFX
 
 # Step 0b: Install WiringPi if missing
 if ! command -v gpio &> /dev/null; then
@@ -77,24 +86,19 @@ else
     info "✅ SSD1306_OLED_RPI library already present."
 fi
 
-# Check if the library has the necessary source files
-if [ ! -f "$SSD1306_SRC/Adafruit_SSD1306.h" ]; then
-    error "SSD1306_OLED_RPI library missing necessary header files."
-    exit 1
-fi
-
 # Step 2: Compile WeatherDisplay binary with local OLED support
 info "🛠️ Compiling WeatherDisplay binary with local OLED support..."
 
 g++ -Wall -O2 -std=c++17 \
     -I"$SCRIPT_DIR/include" \
-    -I"$SSD1306_SRC" \
+    -I"$SCRIPT_DIR/include/external/ssd1306_oled_rpi" \
+    -I/usr/local/include \
     "$SCRIPT_DIR/src/main.cpp" \
     "$SCRIPT_DIR/src/config.cpp" \
     "$SCRIPT_DIR/src/lcd.cpp" \
     "$SCRIPT_DIR/src/weather.cpp" \
     "$SCRIPT_DIR/src/oled.cpp" \
-    "$SSD1306_SRC/Adafruit_SSD1306.cpp" \  # Include the necessary .cpp file
+    "$SSD1306_SRC/Adafruit_SSD1306.cpp" \
     -lwiringPi -lcurl -lpthread -o "$BINARY_PATH" \
     -L"$SSD1306_SRC" -lssd1306_oled_rpi  # Ensure linking to the correct library
 
