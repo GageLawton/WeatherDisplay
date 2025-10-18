@@ -40,14 +40,16 @@ RUN git clone https://github.com/gavinlyonsrepo/SSD1306_OLED_RPI.git /tmp/ssd130
 # Step: Compile your app linking to the SSD1306 static library and other necessary files
 RUN g++ -Wall -O2 -std=c++17 \
     -I"$SCRIPT_DIR/include" \
-    -I"$SCRIPT_DIR/include/external/ssd1306_oled_rpi" \
+    -I"$SCRIPT_DIR/include/external/ssd1306_oled_rpi" \  # Ensure this is correct
     "$SCRIPT_DIR/src/main.cpp" \
     "$SCRIPT_DIR/src/config.cpp" \
     "$SCRIPT_DIR/src/lcd.cpp" \
     "$SCRIPT_DIR/src/weather.cpp" \
     "$SCRIPT_DIR/src/oled.cpp" \
-    "$SCRIPT_DIR/include/external/ssd1306_oled_rpi/Adafruit_SSD1306.cpp" \
-    -lwiringPi -lcurl -lpthread -o "$BINARY_PATH"
+    "$SCRIPT_DIR/include/external/ssd1306_oled_rpi/Adafruit_SSD1306.cpp" \  # Link the .cpp explicitly
+    -lwiringPi -lcurl -lpthread -o "$BINARY_PATH" \
+    -L"$SCRIPT_DIR/include/external/ssd1306_oled_rpi" -lssd1306_oled_rpi  # Ensure the path to .a file is included
+
 
 # Make sure the binary is executable
 RUN chmod +x /app/weather

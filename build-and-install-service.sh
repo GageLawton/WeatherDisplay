@@ -82,14 +82,16 @@ info "🛠️ Compiling WeatherDisplay binary with local OLED support..."
 
 g++ -Wall -O2 -std=c++17 \
     -I"$SCRIPT_DIR/include" \
-    -I"$SCRIPT_DIR/include/external/ssd1306_oled_rpi" \
+    -I"$SCRIPT_DIR/include/external/ssd1306_oled_rpi" \  # Ensure this is correct
     "$SCRIPT_DIR/src/main.cpp" \
     "$SCRIPT_DIR/src/config.cpp" \
     "$SCRIPT_DIR/src/lcd.cpp" \
     "$SCRIPT_DIR/src/weather.cpp" \
     "$SCRIPT_DIR/src/oled.cpp" \
-    "$SCRIPT_DIR/include/external/ssd1306_oled_rpi/Adafruit_SSD1306.cpp" \
-    -lwiringPi -lcurl -lpthread -o "$BINARY_PATH"
+    "$SCRIPT_DIR/include/external/ssd1306_oled_rpi/Adafruit_SSD1306.cpp" \  # Link the .cpp explicitly
+    -lwiringPi -lcurl -lpthread -o "$BINARY_PATH" \
+    -L"$SCRIPT_DIR/include/external/ssd1306_oled_rpi" -lssd1306_oled_rpi  # Ensure the path to .a file is included
+
 
 # Check if the binary was created
 if [ ! -f "$BINARY_PATH" ]; then

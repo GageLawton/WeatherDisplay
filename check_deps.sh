@@ -82,15 +82,16 @@ info "🛠️ Compiling WeatherDisplay binary with local OLED support..."
 
 g++ -Wall -O2 -std=c++17 \
     -I"$SCRIPT_DIR/include" \
-    -I"$SSD1306_SRC" \  # Correct path to SSD1306_OLED_RPI header files
-    "$SCRIPT_DIR/main.cpp" \
-    "$SCRIPT_DIR/config.cpp" \
-    "$SCRIPT_DIR/lcd.cpp" \
-    "$SCRIPT_DIR/weather.cpp" \
-    "$SCRIPT_DIR/oled.cpp" \
-    "$SSD1306_SRC/Adafruit_SSD1306.cpp" \  # Correct path to SSD1306_OLED_RPI .cpp files
+    -I"$SCRIPT_DIR/include/external/ssd1306_oled_rpi" \  # Ensure this is correct
+    "$SCRIPT_DIR/src/main.cpp" \
+    "$SCRIPT_DIR/src/config.cpp" \
+    "$SCRIPT_DIR/src/lcd.cpp" \
+    "$SCRIPT_DIR/src/weather.cpp" \
+    "$SCRIPT_DIR/src/oled.cpp" \
+    "$SCRIPT_DIR/include/external/ssd1306_oled_rpi/Adafruit_SSD1306.cpp" \  # Link the .cpp explicitly
     -lwiringPi -lcurl -lpthread -o "$BINARY_PATH" \
-    -L"$SSD1306_SRC" -lssd1306_oled_rpi  # Linking SSD1306_OLED_RPI static library
+    -L"$SCRIPT_DIR/include/external/ssd1306_oled_rpi" -lssd1306_oled_rpi  # Ensure the path to .a file is included
+
 
 chmod +x "$BINARY_PATH"
 success "✅ Binary compiled: $BINARY_PATH"
