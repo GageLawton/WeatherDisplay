@@ -55,15 +55,25 @@ sudo apt-get install -y \
 
 # Install Adafruit_GFX library manually
 info "📦 Installing Adafruit_GFX library manually..."
-git clone https://github.com/adafruit/Adafruit-GFX-Library.git /tmp/Adafruit-GFX
 
-# Copy Adafruit_GFX headers and source files into your project
-mkdir -p "$SCRIPT_DIR/include/external/Adafruit_GFX"
-cp /tmp/Adafruit-GFX/Adafruit_GFX.h "$SCRIPT_DIR/include/external/Adafruit_GFX/Adafruit_GFX.h"
-cp /tmp/Adafruit-GFX/Adafruit_GFX.cpp "$SCRIPT_DIR/src/Adafruit_GFX.cpp"
+# Define the path where Adafruit GFX library should be located
+ADAFRUIT_GFX_PATH="$SCRIPT_DIR/include/external/Adafruit_GFX"
 
-# Clean up
-rm -rf /tmp/Adafruit-GFX
+# Check if the Adafruit GFX directory exists and contains the necessary files
+if [ ! -d "$ADAFRUIT_GFX_PATH" ] || [ ! -f "$ADAFRUIT_GFX_PATH/Adafruit_GFX.h" ]; then
+    info "📥 Cloning Adafruit_GFX Library..."
+    git clone https://github.com/adafruit/Adafruit-GFX-Library.git /tmp/Adafruit-GFX
+
+    # Copy the necessary files into your project
+    mkdir -p "$ADAFRUIT_GFX_PATH"
+    cp /tmp/Adafruit-GFX/Adafruit_GFX.h "$ADAFRUIT_GFX_PATH/Adafruit_GFX.h"
+    cp /tmp/Adafruit-GFX/Adafruit_GFX.cpp "$SCRIPT_DIR/src/Adafruit_GFX.cpp"
+
+    # Clean up the temporary directory
+    rm -rf /tmp/Adafruit-GFX
+else
+    info "✅ Adafruit_GFX library already installed and up to date."
+fi
 
 # Step 0b: Install WiringPi if missing
 if ! command -v gpio &> /dev/null; then
@@ -107,7 +117,6 @@ g++ -Wall -O2 -std=c++17 \
     "$SCRIPT_DIR/include/external/Adafruit_GFX/Adafruit_GFX.cpp" \
     -lwiringPi -lcurl -lpthread -o "$BINARY_PATH" \
     -L"$SCRIPT_DIR/include/external/ssd1306_oled_rpi" -lssd1306_oled_rpi
-
 
 if [ $? -ne 0 ]; then
     error "Compilation failed!"
