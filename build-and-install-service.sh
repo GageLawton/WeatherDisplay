@@ -82,18 +82,18 @@ info "🛠️ Compiling WeatherDisplay binary with local OLED support..."
 
 g++ -Wall -O2 -std=c++17 \
     -I"$SCRIPT_DIR/include" \
-    -I"$SSD1306_SRC" \
+    -I"$SCRIPT_DIR/include/external/Adafruit_SSD1306" \   # Correct path to Adafruit_SSD1306 header files
     "$SCRIPT_DIR/main.cpp" \
     "$SCRIPT_DIR/config.cpp" \
     "$SCRIPT_DIR/lcd.cpp" \
     "$SCRIPT_DIR/weather.cpp" \
     "$SCRIPT_DIR/oled.cpp" \
-    "$SSD1306_SRC/Adafruit_SSD1306.cpp" \
-    "$SSD1306_SRC/Adafruit_SSD1306.h" \
+    "$SCRIPT_DIR/include/external/Adafruit_SSD1306/Adafruit_SSD1306.cpp" \  # Correct path to .cpp files
     -lwiringPi -lcurl -lpthread -o "$BINARY_PATH"
 
 chmod +x "$BINARY_PATH"
 success "✅ Binary compiled: $BINARY_PATH"
+
 
 # Step 3: Check service file
 if [ ! -f "$SERVICE_PATH" ]; then
