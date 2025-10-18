@@ -26,28 +26,33 @@ RUN git clone https://github.com/WiringPi/WiringPi.git /tmp/wiringpi && \
 # Set working directory
 WORKDIR /app
 
-# Copy source code into the container
+# Copy your app source code into the container
 COPY . .
 
-# Compile the WeatherDisplay app with local SSD1306 source files (no -lssd1306)
-RUN g++ -Wall -O2 -std=c++17 \
-    -I"/app/include" \
-    -I"/app/include/external/ssd1306/src" \
-    -I"/app/include/external/ssd1306/src/ssd1306_hal/linux" \
-    /app/main.cpp \
-    /app/config.cpp \
-    /app/lcd.cpp \
-    /app/weather.cpp \
-    /app/oled.cpp \
-    /app/include/external/ssd1306/src/ssd1306_fonts.cpp \
-    /app/include/external/ssd1306/src/ssd1306_i2c.cpp \
-    /app/include/external/ssd1306/src/ssd1306_oled.cpp \
-    /app/include/external/ssd1306/src/ssd1306_generic.c \
-    /app/include/external/ssd1306/src/ssd1306_hal/linux/platform.c \
-    -lwiringPi -lcurl -lpthread -o /app/weather
+# Clone and build SSD1306_OLED_RPI library
+RUN git clone https://github.com/gavinlyonsrepo/SSD1306_OLED_RPI.git /tmp/ssd1306 && \
+    mkdir -p /tmp/ssd1306/build && \
+    cd /tmp/ssd1306/build && \
+    cmake .. && \
+    make
 
-# Ensure the binary is executable
+# Compile your app linking to the SSD1306 static library
+RUN g++ -Wall -O2 -std=c++17 \
+    -I"$SCRIPT_DIR/include" \
+    -I"$SSD1306_SRC" \
+    "$SCRIPT_DIR/main.cpp" \
+    "$SCRIPT_DIR/config.cpp" \
+    "$SCRIPT_DIR/lcd.cpp" \            # your LCD code
+    "$SCRIPT_DIR/weather.cpp" \
+    "$SCRIPT_DIR/oled.cpp" \           # your OLED wrapper code
+    "$SSD1306_SRC/ssd1306_console.cpp" \
+    "$SSD1306_SRC/ssd1306_fonts.cpp" \
+    "$SSD1306_SRC/ssd1306_i2c.cpp" \
+    "$SSD1306_SRC/ssd1306_oled.cpp" \
+    -lwiringPi -lcurl -lpthread -o "$BINARY_PATH"
+
+# Make sure the binary is executable
 RUN chmod +x /app/weather
 
-# Default command when container runs
+# Default command
 CMD ["./weather"]

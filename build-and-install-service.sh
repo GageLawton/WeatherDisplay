@@ -15,7 +15,7 @@ SERVICE_NAME="weather-display.service"
 SERVICE_PATH="$SCRIPT_DIR/systemd/$SERVICE_NAME"
 SYSTEMD_DIR="/etc/systemd/system"
 
-# Colors
+# Colors for output
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
@@ -32,12 +32,12 @@ if [ -z "${WEATHER_API_KEY:-}" ] || [ -z "${WEATHER_LOCATION:-}" ]; then
     warning "WEATHER_API_KEY or WEATHER_LOCATION not set. Service may fail to fetch weather."
 fi
 
-# Check for root
+# Check for root permissions
 if [ "$EUID" -ne 0 ]; then
     warning "You are not running as root. You may be prompted for your password."
 fi
 
-# Step 0: Install dependencies
+# Step 0: Install build dependencies
 info "📦 Installing build dependencies (g++, curl, cmake, freetype)..."
 sudo apt-get update
 sudo apt-get install -y \
@@ -92,17 +92,17 @@ if [ ! -f "$SERVICE_PATH" ]; then
     exit 1
 fi
 
-# Step 3: Copy service file
+# Step 3: Copy systemd service file
 info "📁 Copying $SERVICE_NAME to $SYSTEMD_DIR..."
 sudo cp "$SERVICE_PATH" "$SYSTEMD_DIR"
 sudo chmod 644 "$SYSTEMD_DIR/$SERVICE_NAME"
 
-# Step 4: Inject env vars safely
+# Step 4: Inject environment variables into systemd unit safely
 info "🔧 Injecting environment variables into systemd unit..."
 sudo sed -i "/^ExecStart=/i Environment=\"WEATHER_API_KEY=${WEATHER_API_KEY//&/\\&}\"" "$SYSTEMD_DIR/$SERVICE_NAME"
 sudo sed -i "/^ExecStart=/i Environment=\"WEATHER_LOCATION=${WEATHER_LOCATION//&/\\&}\"" "$SYSTEMD_DIR/$SERVICE_NAME"
 
-# Step 5: Reload systemd & enable service
+# Step 5: Reload systemd daemon & enable service on boot
 info "🔄 Reloading systemd daemon..."
 sudo systemctl daemon-reexec
 sudo systemctl daemon-reload
@@ -110,11 +110,11 @@ sudo systemctl daemon-reload
 info "✅ Enabling service to start on boot..."
 sudo systemctl enable "$SERVICE_NAME"
 
-# Step 6: Start or restart service
+# Step 6: Start or restart the service
 info "🚀 Starting service..."
 sudo systemctl restart "$SERVICE_NAME"
 
-# Step 7: Show status
+# Step 7: Show service status
 info "📋 Service status:"
 sudo systemctl status "$SERVICE_NAME" --no-pager
 

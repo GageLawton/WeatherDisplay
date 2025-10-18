@@ -1,44 +1,38 @@
-#include "oled.h"
-#include "ssd1306.h"
-#include <nano_gfx.h>
+#include <iostream>
 #include <chrono>
 #include <ctime>
 #include <thread>
-#include <iostream>
+#include "ssd1306.h"
 
-static SSD1306 oled(128, 64);
+int main() {
+    SSD1306 display;
 
-void startOLEDClock() {
-    if (!oled.begin(SSD1306_I2C_ADDRESS, -1)) {
-        std::cerr << "[ERROR] Failed to initialize OLED clock display!" << std::endl;
-        return;
+    if (!display.init()) {
+        std::cerr << "OLED initialization failed!" << std::endl;
+        return 1;
     }
 
-    oled.clear();
-    oled.setFont(Font_6x8);
+    while (true) {
+        // Clear the display buffer
+        display.clear();
 
-    std::thread([&oled]() {
-        while (true) {
-            oled.clear();
+        // Get current time
+        auto now = std::chrono::system_clock::now();
+        std::time_t now_time = std::chrono::system_clock::to_time_t(now);
+        std::tm* ptm = std::localtime(&now_time);
 
-            // Get current time
-            auto now = std::chrono::system_clock::now();
-            std::time_t now_time = std::chrono::system_clock::to_time_t(now);
-            std::tm* ptm = std::localtime(&now_time);
+        // Format time string HH:MM:SS
+        char timeStr[9];
+        std::strftime(timeStr, sizeof(timeStr), "%H:%M:%S", ptm);
 
-            char timeStr[16];
-            std::strftime(timeStr, sizeof(timeStr), "%H:%M:%S", ptm);
+        // Print time at (x=0, y=0)
+        display.print(timeStr);
 
-            // Center text: 6 pixels width per char * 8 chars
-            int x = (128 - 6 * 8) / 2;
-            int y = (64 - 8) / 2;
+        // Update the physical display
+        display.display();
 
-            oled.setCursor(x, y);
-            oled.print(timeStr);
-            oled.display();
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
 
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        }
-    }).detach();
+    return 0;
 }
-
