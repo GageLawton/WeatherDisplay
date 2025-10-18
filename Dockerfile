@@ -23,26 +23,24 @@ RUN git clone https://github.com/WiringPi/WiringPi.git /tmp/wiringpi && \
     cd /tmp/wiringpi/devLib && make && make install && \
     rm -rf /tmp/wiringpi
 
-# Build ssd1306 OLED library
-RUN git clone https://github.com/lexus2k/ssd1306.git /tmp/ssd1306 && \
-    cd /tmp/ssd1306 && mkdir build && cd build && \
-    cmake .. && make -j4 && make install && \
-    rm -rf /tmp/ssd1306
-
 # Set working directory
 WORKDIR /app
 
 # Copy source code into the container
 COPY . .
 
-# Compile the WeatherDisplay app with OLED support
+# Compile the WeatherDisplay app with local SSD1306 source files (no -lssd1306)
 RUN g++ -Wall -O2 -std=c++17 \
     -Isrc \
     -Iinclude \
     -Iinclude/external/ssd1306/src \
     -Iinclude/external/ssd1306/src/interfaces \
     src/main.cpp src/weather.cpp src/lcd.cpp src/config.cpp src/oled.cpp \
-    -lwiringPi -lcurl -lssd1306 -lpthread -o weather
+    include/external/ssd1306/src/ssd1306_console.cpp \
+    include/external/ssd1306/src/ssd1306_fonts.cpp \
+    include/external/ssd1306/src/ssd1306_i2c.cpp \
+    include/external/ssd1306/src/ssd1306_oled.cpp \
+    -lwiringPi -lcurl -lpthread -o weather
 
 # Ensure the binary is executable
 RUN chmod +x weather
