@@ -53,12 +53,16 @@ sudo apt-get install -y \
     libpng-dev \
     libgpiod-dev  # Ensure GPIO headers are available
 
-# Install Adafruit_GFX library (required by Adafruit_SSD1306)
-info "📦 Installing Adafruit_GFX library..."
+# Install Adafruit_GFX library manually
+info "📦 Installing Adafruit_GFX library manually..."
 git clone https://github.com/adafruit/Adafruit-GFX-Library.git /tmp/Adafruit-GFX
-cd /tmp/Adafruit-GFX
-sudo make install
-cd ~
+
+# Copy Adafruit_GFX headers and source files into your project
+mkdir -p "$SCRIPT_DIR/include/external/Adafruit_GFX"
+cp /tmp/Adafruit-GFX/Adafruit_GFX.h "$SCRIPT_DIR/include/external/Adafruit_GFX/Adafruit_GFX.h"
+cp /tmp/Adafruit-GFX/Adafruit_GFX.cpp "$SCRIPT_DIR/src/Adafruit_GFX.cpp"
+
+# Clean up
 rm -rf /tmp/Adafruit-GFX
 
 # Step 0b: Install WiringPi if missing
@@ -92,15 +96,16 @@ info "🛠️ Compiling WeatherDisplay binary with local OLED support..."
 g++ -Wall -O2 -std=c++17 \
     -I"$SCRIPT_DIR/include" \
     -I"$SCRIPT_DIR/include/external/ssd1306_oled_rpi" \
-    -I/usr/local/include \
+    -I"$SCRIPT_DIR/include/external/Adafruit_GFX" \
     "$SCRIPT_DIR/src/main.cpp" \
     "$SCRIPT_DIR/src/config.cpp" \
     "$SCRIPT_DIR/src/lcd.cpp" \
     "$SCRIPT_DIR/src/weather.cpp" \
     "$SCRIPT_DIR/src/oled.cpp" \
     "$SSD1306_SRC/Adafruit_SSD1306.cpp" \
+    "$SCRIPT_DIR/src/Adafruit_GFX.cpp" \  # Link the GFX source file
     -lwiringPi -lcurl -lpthread -o "$BINARY_PATH" \
-    -L"$SSD1306_SRC" -lssd1306_oled_rpi  # Ensure linking to the correct library
+    -L"$SSD1306_SRC" -lssd1306_oled_rpi
 
 if [ $? -ne 0 ]; then
     error "Compilation failed!"
