@@ -96,16 +96,17 @@ info "🛠️ Compiling WeatherDisplay binary with local OLED support..."
 g++ -Wall -O2 -std=c++17 \
     -I"$SCRIPT_DIR/include" \
     -I"$SCRIPT_DIR/include/external/ssd1306_oled_rpi" \
-    -I"$SCRIPT_DIR/include/external/Adafruit_GFX" \
+    -I/usr/include/nlohmann \
     "$SCRIPT_DIR/src/main.cpp" \
     "$SCRIPT_DIR/src/config.cpp" \
     "$SCRIPT_DIR/src/lcd.cpp" \
     "$SCRIPT_DIR/src/weather.cpp" \
     "$SCRIPT_DIR/src/oled.cpp" \
-    "$SSD1306_SRC/Adafruit_SSD1306.cpp" \
-    "$SCRIPT_DIR/src/Adafruit_GFX.cpp" \  # Link the GFX source file
+    "$SCRIPT_DIR/include/external/ssd1306_oled_rpi/Adafruit_SSD1306.cpp" \
+    "$SCRIPT_DIR/include/external/Adafruit_GFX/Adafruit_GFX.cpp" \
     -lwiringPi -lcurl -lpthread -o "$BINARY_PATH" \
-    -L"$SSD1306_SRC" -lssd1306_oled_rpi
+    -L"$SCRIPT_DIR/include/external/ssd1306_oled_rpi" -lssd1306_oled_rpi
+
 
 if [ $? -ne 0 ]; then
     error "Compilation failed!"
