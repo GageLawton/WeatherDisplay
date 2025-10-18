@@ -4,7 +4,7 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
-#include "include/json.hpp"
+#include <nlohmann/json.hpp>  // Use the system-installed json.hpp
 
 using json = nlohmann::json;
 
@@ -67,7 +67,7 @@ Weather getWeather(const std::string& apiKey, const std::string& city, std::stri
     curl_global_cleanup();
 
     try {
-        auto j = json::parse(readBuffer);
+        auto j = json::parse(readBuffer);  // Parsing the JSON response
 
         std::string description = "N/A";
         float temp = 0.0f;
