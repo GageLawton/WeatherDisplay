@@ -17,7 +17,7 @@ void startOLEDClock() {
     oled.clear();
     oled.setFont(Font_6x8);
 
-    std::thread([]() {
+    std::thread([&oled]() {
         while (true) {
             oled.clear();
 
@@ -41,3 +41,4 @@ void startOLEDClock() {
         }
     }).detach();
 }
+
