@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/weather_display.dir/src/config.cpp.o CMakeFiles/weather_display.dir/src/lcd.cpp.o CMakeFiles/weather_display.dir/src/main.cpp.o CMakeFiles/weather_display.dir/src/weather.cpp.o -o bin/weather_display  -lwiringPi -lcurl 

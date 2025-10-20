@@ -1,8 +1,0 @@
-/home/gagem/Documents/WeatherDisplay/build/CMakeFiles/weather_display.dir
-/home/gagem/Documents/WeatherDisplay/build/CMakeFiles/install-service.dir
-/home/gagem/Documents/WeatherDisplay/build/CMakeFiles/edit_cache.dir
-/home/gagem/Documents/WeatherDisplay/build/CMakeFiles/rebuild_cache.dir
-/home/gagem/Documents/WeatherDisplay/build/CMakeFiles/list_install_components.dir
-/home/gagem/Documents/WeatherDisplay/build/CMakeFiles/install.dir
-/home/gagem/Documents/WeatherDisplay/build/CMakeFiles/install/local.dir
-/home/gagem/Documents/WeatherDisplay/build/CMakeFiles/install/strip.dir
