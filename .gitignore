@@ -1,0 +1,23 @@
+# Build folder
+build/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Compiled object files and binaries
+*.o
+*.obj
+*.exe
+*.out
+*.app
+
+# Logs and temporary files
+*.log
+*.tmp
