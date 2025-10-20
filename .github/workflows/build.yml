@@ -21,13 +21,13 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential g++ libwiringpi-dev libcurl4-openssl-dev
+          sudo apt-get install -y build-essential g++ libwiringpi-dev libcurl4-openssl-dev cmake make
 
-      - name: Build WeatherDisplay
+      - name: Build WeatherDisplay using Makefile
         run: |
           set -e
-          echo "[INFO] Building WeatherDisplay..."
-          g++ -o weather main.cpp weather.cpp lcd.cpp config.cpp -I./include -lwiringPi -lcurl -std=c++11
+          echo "[INFO] Running make all..."
+          make all
           echo "[INFO] Build completed."
 
       - name: Verify environment variable (masked)
@@ -40,12 +40,11 @@ jobs:
           fi
 
       - name: List built files
-        run: ls -l weather
+        run: ls -l build/bin
 
       - name: Upload Weather Binary
-        uses: actions/upload-artifact@v4 
+        uses: actions/upload-artifact@v4
         with:
           name: weather-${{ github.run_number }} # Unique name for the artifact
-          path: ./weather # Path to the built binary
+          path: ./build/bin/weather_display # Path to the built binary
           retention-days: 7 # Retain artifact for 7 days
- 
