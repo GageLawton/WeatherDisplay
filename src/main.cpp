@@ -5,6 +5,17 @@
 #include <wiringPi.h>
 #include <unistd.h>
 #include <iostream>
+#include <cstdlib> // for system()
+
+// 🆕 Function to call the Python script that displays time on the OLED
+void displayCurrentTimeOnOLED() {
+    int result = system("python3 scripts/oled_display.py");
+    if (result != 0) {
+        std::cerr << "[ERROR] Failed to update OLED with current time." << std::endl;
+    } else {
+        std::cout << "[INFO] OLED display updated with current time." << std::endl;
+    }
+}
 
 int main() {
     Config cfg;
@@ -16,6 +27,9 @@ int main() {
     std::cout << "[INFO] Units: " << cfg.units << std::endl;
     std::cout << "[INFO] Update interval: " << cfg.updateInterval << " seconds" << std::endl;
     std::cout << "[INFO] ==============================\n" << std::endl;
+
+    // 🆕 Display current time on OLED
+    displayCurrentTimeOnOLED();
 
     // Setup LCD
     int fd = wiringPiI2CSetup(0x27); // Adjust I2C address
