@@ -9,7 +9,7 @@ def main():
     serial = i2c(port=1, address=0x3C)  # Adjust if your OLED uses a different address
     device = ssd1306(serial)
     
-    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 30)
+    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 25)
 
     while True:
         width = device.width
