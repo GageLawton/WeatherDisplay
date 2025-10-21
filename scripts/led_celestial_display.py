@@ -1,13 +1,18 @@
 import time
 import json
+import os
 from datetime import datetime
-from astral import LocationInfo, moon
+from astral import LocationInfo
 from astral.sun import sun
+from astral.moon import moon_illumination, moon_phase
 import board
 import neopixel
 
 # === Load Config ===
-with open("config.json", "r") as f:
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CONFIG_PATH = os.path.join(BASE_DIR, "..", "config.json")
+
+with open(CONFIG_PATH, "r") as f:
     config = json.load(f)
 
 # Location and LED config
@@ -50,9 +55,9 @@ def sun_mode(now, sunrise, sunset):
     pixels.show()
 
 def moon_mode():
-    illumination = moon.illumination(datetime.now()) * 100  # 0-1 scaled to 0-100%
-    phase = moon.phase(datetime.now())  # 0-29.53 moon phase number
-    led_count = int((illumination / 100.0) * NUM_LEDS)
+    illum = moon_illumination(datetime.now())
+    phase = moon_phase(datetime.now())
+    led_count = int((illum / 100.0) * NUM_LEDS)
 
     direction = "waxing" if phase < 15 else "waning"
     pixels.fill((0, 0, 0))
@@ -60,7 +65,7 @@ def moon_mode():
     for i in range(led_count):
         index = i if direction == "waxing" else NUM_LEDS - 1 - i
         pixels[index] = (80, 80, 255)
-    
+
     pixels.show()
 
 # === Main Loop ===
@@ -70,17 +75,9 @@ while True:
     sunrise = sun_times["sunrise"]
     sunset = sun_times["sunset"]
 
-    try:
-        print(f"[{now.strftime('%Y-%m-%d %H:%M:%S')}] Sunrise: {sunrise.time()}, Sunset: {sunset.time()}")
+    if is_daytime(now, sunrise, sunset):
+        sun_mode(now, sunrise, sunset)
+    else:
+        moon_mode()
 
-        if is_daytime(now, sunrise, sunset):
-            sun_mode(now, sunrise, sunset)
-        else:
-            moon_mode()
-
-    except Exception as e:
-        print("Error updating LEDs:", e)
-        pixels.fill((255, 0, 0))
-        pixels.show()
-
-    time.sleep(60)
+    time.sleep(30)
