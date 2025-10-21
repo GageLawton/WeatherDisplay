@@ -1,0 +1,14 @@
+{
+  "location": {
+    "city": "Westmont, Illinois",
+    "region": "USA",
+    "timezone": "America/Chicago",
+    "latitude": 41.795832,
+    "longitude": -87.975325
+  },
+  "led": {
+    "pin": 18,
+    "count": 16,
+    "brightness": 0.3
+  }
+}
