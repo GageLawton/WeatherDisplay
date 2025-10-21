@@ -9,6 +9,6 @@
   "led": {
     "pin": 18,
     "count": 16,
-    "brightness": 0.05
+    "brightness": 0.1
   }
 }
