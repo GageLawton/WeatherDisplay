@@ -1,9 +1,8 @@
 import time
 import json
 from datetime import datetime
-from astral import LocationInfo
+from astral import LocationInfo, moon
 from astral.sun import sun
-from astral.moon import moon_illumination, moon_phase
 import board
 import neopixel
 
@@ -51,9 +50,9 @@ def sun_mode(now, sunrise, sunset):
     pixels.show()
 
 def moon_mode():
-    illum = moon_illumination(datetime.now())
-    phase = moon_phase(datetime.now())
-    led_count = int((illum / 100.0) * NUM_LEDS)
+    illumination = moon.illumination(datetime.now()) * 100  # 0-1 scaled to 0-100%
+    phase = moon.phase(datetime.now())  # 0-29.53 moon phase number
+    led_count = int((illumination / 100.0) * NUM_LEDS)
 
     direction = "waxing" if phase < 15 else "waning"
     pixels.fill((0, 0, 0))
