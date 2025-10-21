@@ -1,18 +1,15 @@
 import time
 import json
-import os
 from datetime import datetime
-from astral import LocationInfo
+from astral import LocationInfo, moon
 from astral.sun import sun
-from astral.moon import moon_illumination, moon_phase
 import board
 import neopixel
 
 # === Load Config ===
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CONFIG_PATH = os.path.join(BASE_DIR, "..", "config.json")
-
-with open(CONFIG_PATH, "r") as f:
+import os
+config_path = os.path.join(os.path.dirname(__file__), "..", "config.json")
+with open(config_path, "r") as f:
     config = json.load(f)
 
 # Location and LED config
@@ -55,17 +52,17 @@ def sun_mode(now, sunrise, sunset):
     pixels.show()
 
 def moon_mode():
-    illum = moon_illumination(datetime.now())
-    phase = moon_phase(datetime.now())
-    led_count = int((illum / 100.0) * NUM_LEDS)
+    now = datetime.now(tz=LOCATION.timezone)
+    phase_day = moon.phase(now)  # Lunar day (0-29.53)
+    illum = phase_day / 29.53    # Approximate illumination fraction (0.0 to 1.0)
 
-    direction = "waxing" if phase < 15 else "waning"
+    led_count = int(illum * NUM_LEDS)
+    direction = "waxing" if phase_day < 15 else "waning"
+
     pixels.fill((0, 0, 0))
-
     for i in range(led_count):
         index = i if direction == "waxing" else NUM_LEDS - 1 - i
         pixels[index] = (80, 80, 255)
-
     pixels.show()
 
 # === Main Loop ===
@@ -80,4 +77,4 @@ while True:
     else:
         moon_mode()
 
-    time.sleep(30)
+    time.sleep(60)
