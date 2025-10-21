@@ -72,4 +72,16 @@ while True:
     sunset = sun_times["sunset"]
 
     try:
-        print(f"[{n]()
+        print(f"[{now.strftime('%Y-%m-%d %H:%M:%S')}] Sunrise: {sunrise.time()}, Sunset: {sunset.time()}")
+
+        if is_daytime(now, sunrise, sunset):
+            sun_mode(now, sunrise, sunset)
+        else:
+            moon_mode()
+
+    except Exception as e:
+        print("Error updating LEDs:", e)
+        pixels.fill((255, 0, 0))
+        pixels.show()
+
+    time.sleep(60)
