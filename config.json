@@ -9,12 +9,12 @@
   "led": {
     "spi_device": "/dev/spidev0.0",
     "count": 16,
-    "brightness": 0.1,
+    "brightness": 0.4,
     "offset": 0,
     "clockwise": true
   },
   "oled": {
-    "format": "HH:MM:SS",
+    "format": "II:MM:SS",
     "scale": "auto",
     "i2c_address": "0x3C"
   },

@@ -19,9 +19,18 @@ std::string formatTime(const std::string& fmt, std::time_t t) {
     std::tm tm = *std::localtime(&t);
     std::string sf;
     for (size_t i = 0; i < fmt.size(); ) {
-        if      (fmt.compare(i, 8, "HH:MM:SS") == 0) { sf += "%H:%M:%S"; i += 8; }
-        else if (fmt.compare(i, 5, "HH:MM")    == 0) { sf += "%H:%M";    i += 5; }
-        else if (fmt.compare(i, 2, "SS")       == 0) { sf += "%S";       i += 2; }
+        // 12-hour formats. Order matters - longest first.
+        if      (fmt.compare(i, 11, "II:MM:SS AP") == 0) { sf += "%I:%M:%S %p"; i += 11; }
+        else if (fmt.compare(i, 8,  "II:MM AP")    == 0) { sf += "%I:%M %p";    i += 8;  }
+        else if (fmt.compare(i, 8,  "II:MM:SS")    == 0) { sf += "%I:%M:%S";    i += 8;  }
+        else if (fmt.compare(i, 5,  "II:MM")       == 0) { sf += "%I:%M";       i += 5;  }
+        // 24-hour formats.
+        else if (fmt.compare(i, 8,  "HH:MM:SS")    == 0) { sf += "%H:%M:%S";    i += 8;  }
+        else if (fmt.compare(i, 5,  "HH:MM")       == 0) { sf += "%H:%M";       i += 5;  }
+        // Standalone tokens.
+        else if (fmt.compare(i, 2,  "SS")          == 0) { sf += "%S";          i += 2;  }
+        else if (fmt.compare(i, 2,  "AP")          == 0) { sf += "%p";          i += 2;  }
+        // Pass-through.
         else { sf += fmt[i++]; }
     }
     char buf[64];
