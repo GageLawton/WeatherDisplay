@@ -1,0 +1,23 @@
+# Mac-only test build for the NeoPixel ring driver (mock SPI).
+#   make -f Makefile.neopixel
+#   ./test_neopixel
+#   open test_output/ring_*.ppm
+
+CXX      := clang++
+CXXFLAGS := -std=c++17 -Wall -Wextra -O2 -Iinclude
+SRCS     := src/neopixel.cpp test/test_neopixel.cpp
+TARGET   := test_neopixel
+
+all: $(TARGET)
+
+$(TARGET): $(SRCS)
+	$(CXX) $(CXXFLAGS) $(SRCS) -o $(TARGET)
+
+view: $(TARGET)
+	./$(TARGET)
+	@open test_output/ring_*.ppm
+
+clean:
+	rm -f $(TARGET)
+
+.PHONY: all clean view

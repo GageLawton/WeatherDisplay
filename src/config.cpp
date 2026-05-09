@@ -5,7 +5,6 @@
 #include "json.hpp"
 
 namespace {
-    // Helper: get env var as string, or empty if unset.
     std::string envOrEmpty(const char* name) {
         const char* v = std::getenv(name);
         return v ? std::string(v) : std::string();
@@ -13,16 +12,25 @@ namespace {
 }
 
 void Config::load(const std::string& filePath) {
-    // Layered defaults: hardcoded -> config.json -> env vars (env wins).
-
     // 1. Hardcoded defaults.
     apiKey         = "";
     location       = "Westmont, IL";
     units          = "F";
     updateInterval = 600;
+
     oledFormat     = "HH:MM:SS";
     oledScale      = "auto";
     oledI2CAddr    = 0x3C;
+
+    // Westmont, IL defaults for celestial calc.
+    latitude       = 41.7958;
+    longitude      = -87.9756;
+
+    ledCount       = 16;
+    ledBrightness  = 0.1;
+    ledOffset      = 0;
+    ledClockwise   = true;
+    ledSpiDevice   = "/dev/spidev0.0";
 
     // 2. Read config.json if present.
     std::ifstream inFile(filePath);
@@ -37,30 +45,44 @@ void Config::load(const std::string& filePath) {
             if (j.contains("UNITS"))             units          = j["UNITS"].get<std::string>();
             if (j.contains("UPDATE_INTERVAL"))   updateInterval = j["UPDATE_INTERVAL"].get<int>();
 
-            // OLED block (preferred for new config).
+            // Location block.
+            if (j.contains("location")) {
+                const auto& loc = j["location"];
+                if (loc.contains("latitude"))  latitude  = loc["latitude"].get<double>();
+                if (loc.contains("longitude")) longitude = loc["longitude"].get<double>();
+            }
+
+            // OLED block.
             if (j.contains("oled")) {
                 const auto& o = j["oled"];
-                if (o.contains("format"))   oledFormat  = o["format"].get<std::string>();
+                if (o.contains("format")) oledFormat = o["format"].get<std::string>();
                 if (o.contains("scale")) {
-                    // accept either a string ("auto") or a number (e.g. 2).
                     if (o["scale"].is_string())      oledScale = o["scale"].get<std::string>();
                     else if (o["scale"].is_number()) oledScale = std::to_string(o["scale"].get<int>());
                 }
                 if (o.contains("i2c_address")) {
-                    // accept hex string "0x3C" or number 60.
-                    if (o["i2c_address"].is_string()) {
+                    if (o["i2c_address"].is_string())
                         oledI2CAddr = std::stoi(o["i2c_address"].get<std::string>(), nullptr, 0);
-                    } else if (o["i2c_address"].is_number()) {
+                    else if (o["i2c_address"].is_number())
                         oledI2CAddr = o["i2c_address"].get<int>();
-                    }
                 }
+            }
+
+            // LED ring block.
+            if (j.contains("led")) {
+                const auto& l = j["led"];
+                if (l.contains("count"))      ledCount      = l["count"].get<int>();
+                if (l.contains("brightness")) ledBrightness = l["brightness"].get<double>();
+                if (l.contains("offset"))     ledOffset     = l["offset"].get<int>();
+                if (l.contains("clockwise"))  ledClockwise  = l["clockwise"].get<bool>();
+                if (l.contains("spi_device")) ledSpiDevice  = l["spi_device"].get<std::string>();
             }
         } catch (const std::exception& e) {
             std::cerr << "[WARNING] Failed to parse " << filePath << ": " << e.what() << std::endl;
         }
     }
 
-    // 3. Env vars override anything else (these are the deployment secrets).
+    // 3. Env vars override.
     {
         std::string s;
         s = envOrEmpty("WEATHER_API_KEY");      if (!s.empty()) apiKey         = s;
@@ -76,4 +98,8 @@ void Config::load(const std::string& filePath) {
     if (oledFormat.empty())     oledFormat = "HH:MM:SS";
     if (oledScale.empty())      oledScale  = "auto";
     if (updateInterval <= 0)    updateInterval = 600;
+    if (ledCount <= 0)          ledCount = 16;
+    if (ledBrightness < 0)      ledBrightness = 0;
+    if (ledBrightness > 1)      ledBrightness = 1;
+    if (ledSpiDevice.empty())   ledSpiDevice = "/dev/spidev0.0";
 }
