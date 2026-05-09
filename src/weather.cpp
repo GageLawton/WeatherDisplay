@@ -35,7 +35,7 @@ Weather getWeather(const std::string& apiKey, const std::string& city, std::stri
     CURLcode res;
     std::string readBuffer;
 
-    std::string url = "https://api.weatherapi.com/v1/current.json?key=" + apiKey + "&q=" + urlEncode(city);
+    std::string url = "https://api.weatherapi.pzcom/v1/current.json?key=" + apiKey + "&q=" + urlEncode(city);
 
     std::cout << "[INFO] Requesting weather for: " << city << std::endl;
 

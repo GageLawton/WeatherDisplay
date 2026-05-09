@@ -11,6 +11,10 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/*.cpp")
 file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/include/*.h")
 
+# Exclude Mac-only mocks from the Pi/CI build.
+# These files are used by Makefile.mac instead.
+list(REMOVE_ITEM SOURCES "${PROJECT_SOURCE_DIR}/src/lcd_mock.cpp")
+
 add_executable(weather_display ${SOURCES} ${HEADERS})
 
 # On the Pi, the I2C bus uses wiringPi. The mock build (Mac) does not.
