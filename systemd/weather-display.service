@@ -1,15 +1,19 @@
 [Unit]
-Description=WeatherDisplay - Weather on LCD via Raspberry Pi
+Description=WeatherDisplay - Weather + clock on Raspberry Pi
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/home/gagem/Documents/WeatherDisplay/weather
+ExecStart=/home/gagem/Documents/WeatherDisplay/build/bin/weather_display
 WorkingDirectory=/home/gagem/Documents/WeatherDisplay
 Restart=on-failure
 RestartSec=10
 User=gagem
+
+# Pass environment from a file so secrets aren't in the unit.
+EnvironmentFile=-/home/gagem/Documents/WeatherDisplay/.env
+
 StandardOutput=journal
 StandardError=journal
 

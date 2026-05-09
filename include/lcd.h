@@ -3,6 +3,7 @@
 
 #include <string>
 
+int  lcd_open(int address);
 void lcd_init(int fd);
 void lcd_display(int fd, const std::string &line1, const std::string &line2);
 

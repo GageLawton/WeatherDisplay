@@ -1,0 +1,34 @@
+# Mac-only build of the full weather_display binary.
+# Uses mock I2C and mock LCD (no wiringPi). Real libcurl for weather.
+#
+#   make -f Makefile.mac           # build
+#   ./weather_display_mac          # run
+#   make -f Makefile.mac clean
+
+CXX      := clang++
+CXXFLAGS := -std=c++17 -Wall -Wextra -O2 -Iinclude
+LDFLAGS  := -lcurl
+
+SRCS := \
+  src/config.cpp \
+  src/weather.cpp \
+  src/i2c_bus.cpp \
+  src/oled.cpp \
+  src/oled_font.cpp \
+  src/lcd_mock.cpp \
+  src/main.cpp
+
+TARGET := weather_display_mac
+
+all: $(TARGET)
+
+$(TARGET): $(SRCS)
+	$(CXX) $(CXXFLAGS) $(SRCS) $(LDFLAGS) -o $(TARGET)
+
+run: $(TARGET)
+	./$(TARGET)
+
+clean:
+	rm -f $(TARGET)
+
+.PHONY: all run clean

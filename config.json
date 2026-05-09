@@ -10,5 +10,12 @@
     "pin": 18,
     "count": 16,
     "brightness": 0.1
-  }
+  },
+  "oled": {
+    "format": "HH:MM:SS",
+    "scale": "auto",
+    "i2c_address": "0x3C"
+  },
+  "UNITS": "F",
+  "UPDATE_INTERVAL": 600
 }

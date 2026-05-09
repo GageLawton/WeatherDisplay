@@ -13,6 +13,10 @@
 #define LCD_BACKLIGHT 0x08
 #define ENABLE 0b00000100
 
+int lcd_open(int address) {
+    return wiringPiI2CSetup(address);
+}
+
 void lcd_toggle_enable(int fd, int bits) {
     usleep(500);
     wiringPiI2CWrite(fd, (bits | ENABLE));
