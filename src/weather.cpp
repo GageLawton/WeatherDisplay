@@ -12,7 +12,6 @@ std::string urlEncode(const std::string &value) {
     std::ostringstream escaped;
     escaped.fill('0');
     escaped << std::hex;
-
     for (char c : value) {
         if (isalnum(static_cast<unsigned char>(c)) || c == '-' || c == '_' || c == '.' || c == '~') {
             escaped << c;
@@ -35,14 +34,14 @@ Weather getWeather(const std::string& apiKey, const std::string& city, std::stri
     CURLcode res;
     std::string readBuffer;
 
-    std::string url = "https://api.weatherapi.pzcom/v1/current.json?key=" + apiKey + "&q=" + urlEncode(city);
-
+    std::string url = "https://api.weatherapi.com/v1/current.json?key=" + apiKey + "&q=" + urlEncode(city);
     std::cout << "[INFO] Requesting weather for: " << city << std::endl;
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
     curl = curl_easy_init();
     if (!curl) {
         std::cerr << "[ERROR] CURL init failed\n";
+        curl_global_cleanup();
         return Weather{"N/A", 0.0f};
     }
 
@@ -50,7 +49,17 @@ Weather getWeather(const std::string& apiKey, const std::string& city, std::stri
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
 
+    // Force IPv4. Some networks have broken IPv6 routing that causes
+    // libcurl to fail with "Could not resolve hostname" even when DNS
+    // is fine and the curl CLI succeeds (it falls back to IPv4 quickly).
+    curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+
+    // Reasonable timeouts so a flaky network doesn't hang the main loop.
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 5L);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
+
     res = curl_easy_perform(curl);
+
     if (res != CURLE_OK) {
         std::cerr << "[ERROR] CURL request failed: " << curl_easy_strerror(res) << "\n";
         curl_easy_cleanup(curl);
@@ -60,7 +69,6 @@ Weather getWeather(const std::string& apiKey, const std::string& city, std::stri
 
     if (rawResponse) {
         *rawResponse = readBuffer;
-        std::cout << "[DEBUG] API Response: " << readBuffer << std::endl;
     }
 
     curl_easy_cleanup(curl);
@@ -84,7 +92,6 @@ Weather getWeather(const std::string& apiKey, const std::string& city, std::stri
         }
 
         return Weather{description, temp};
-
     } catch (const json::exception& e) {
         std::cerr << "[ERROR] JSON parsing error: " << e.what() << "\n";
         return Weather{"N/A", 0.0f};
