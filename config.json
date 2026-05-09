@@ -11,7 +11,7 @@
     "count": 16,
     "brightness": 0.4,
     "offset": 0,
-    "clockwise": true
+    "clockwise": false
   },
   "oled": {
     "format": "II:MM:SS",
