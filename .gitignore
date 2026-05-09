@@ -1,23 +1,18 @@
-# Build folder
+# Build
 build/
 
-# OS generated files
+# Test output
+test_output/
+test_oled
+
+# Secrets
+.env
+
+# Editor / OS junk
+.DS_Service
 .DS_Store
-Thumbs.db
-
-# Editor files
-*.swp
-*.swo
 .vscode/
-.idea/
+*.swp
 
-# Compiled object files and binaries
-*.o
-*.obj
-*.exe
-*.out
-*.app
-
-# Logs and temporary files
-*.log
-*.tmp
+# PGM dumps
+*.pgm
