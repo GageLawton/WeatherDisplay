@@ -5,14 +5,14 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/home/gagem/Documents/WeatherDisplay/build/bin/weather_display
-WorkingDirectory=/home/gagem/Documents/WeatherDisplay
+ExecStart=/usr/local/bin/weather_display
+WorkingDirectory=/home/pi/Documents/WeatherDisplay
 Restart=on-failure
 RestartSec=10
-User=gagem
+User=pi
 
 # Pass environment from a file so secrets aren't in the unit.
-EnvironmentFile=-/home/gagem/Documents/WeatherDisplay/.env
+EnvironmentFile=-/home/pi/Documents/WeatherDisplay/.env
 
 StandardOutput=journal
 StandardError=journal
