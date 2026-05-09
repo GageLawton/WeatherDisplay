@@ -1,0 +1,18 @@
+# Mac-only test build for the celestial math.
+#   make -f Makefile.celestial
+#   ./test_celestial
+
+CXX      := clang++
+CXXFLAGS := -std=c++17 -Wall -Wextra -O2 -Iinclude
+SRCS     := src/celestial.cpp test/test_celestial.cpp
+TARGET   := test_celestial
+
+all: $(TARGET)
+
+$(TARGET): $(SRCS)
+	$(CXX) $(CXXFLAGS) $(SRCS) -o $(TARGET)
+
+clean:
+	rm -f $(TARGET)
+
+.PHONY: all clean

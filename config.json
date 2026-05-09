@@ -3,13 +3,15 @@
     "city": "Westmont, Illinois",
     "region": "USA",
     "timezone": "America/Chicago",
-    "latitude": 41.795832,
-    "longitude": -87.975325
+    "latitude": 41.7958,
+    "longitude": -87.9756
   },
   "led": {
-    "pin": 18,
+    "spi_device": "/dev/spidev0.0",
     "count": 16,
-    "brightness": 0.1
+    "brightness": 0.1,
+    "offset": 0,
+    "clockwise": true
   },
   "oled": {
     "format": "HH:MM:SS",

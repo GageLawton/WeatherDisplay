@@ -7,18 +7,22 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
-# All sources (config, lcd, weather, oled, font, i2c_bus, main)
+# All sources (config, lcd, weather, oled, font, i2c_bus, neopixel, ring,
+# celestial, main)
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/*.cpp")
 file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/include/*.h")
 
 # Exclude Mac-only mocks from the Pi/CI build.
-# These files are used by Makefile.mac instead.
 list(REMOVE_ITEM SOURCES "${PROJECT_SOURCE_DIR}/src/lcd_mock.cpp")
 
 add_executable(weather_display ${SOURCES} ${HEADERS})
 
-# On the Pi, the I2C bus uses wiringPi. The mock build (Mac) does not.
+# I2C: real wiringPi backend.
 target_compile_definitions(weather_display PRIVATE I2C_REAL)
+
+# NeoPixel: real Linux SPI backend.
+target_compile_definitions(weather_display PRIVATE NEOPIXEL_REAL)
+
 target_link_libraries(weather_display wiringPi curl)
 
 install(TARGETS weather_display RUNTIME DESTINATION /usr/local/bin)

@@ -2,9 +2,9 @@
 #include "lcd.h"
 #include "oled.h"
 #include "weather.h"
-
-// #include <wiringPiI2C.h>
-// #include <wiringPi.h>
+#include "neopixel.h"
+#include "ring.h"
+#include "celestial.h"
 
 #include <chrono>
 #include <ctime>
@@ -19,9 +19,9 @@ std::string formatTime(const std::string& fmt, std::time_t t) {
     std::tm tm = *std::localtime(&t);
     std::string sf;
     for (size_t i = 0; i < fmt.size(); ) {
-        if (fmt.compare(i, 8, "HH:MM:SS") == 0) { sf += "%H:%M:%S"; i += 8; }
-        else if (fmt.compare(i, 5, "HH:MM") == 0) { sf += "%H:%M";   i += 5; }
-        else if (fmt.compare(i, 2, "SS") == 0)    { sf += "%S";      i += 2; }
+        if      (fmt.compare(i, 8, "HH:MM:SS") == 0) { sf += "%H:%M:%S"; i += 8; }
+        else if (fmt.compare(i, 5, "HH:MM")    == 0) { sf += "%H:%M";    i += 5; }
+        else if (fmt.compare(i, 2, "SS")       == 0) { sf += "%S";       i += 2; }
         else { sf += fmt[i++]; }
     }
     char buf[64];
@@ -29,8 +29,6 @@ std::string formatTime(const std::string& fmt, std::time_t t) {
     return buf;
 }
 
-// Render a centered time string to the OLED at the requested scale.
-// scaleSpec is either "auto" or a digit "1".."4".
 void drawTime(OLED& oled, const std::string& text, const std::string& scaleSpec) {
     oled.clear();
     if (scaleSpec == "auto") {
@@ -50,7 +48,6 @@ void drawTime(OLED& oled, const std::string& text, const std::string& scaleSpec)
     }
 }
 
-// Pad a string to exactly `width` chars (truncate if longer).
 std::string padTo(const std::string& s, size_t width) {
     if (s.size() >= width) return s.substr(0, width);
     return s + std::string(width - s.size(), ' ');
@@ -65,19 +62,16 @@ int main() {
 
     std::cout << "[INFO] ==============================" << std::endl;
     std::cout << "[INFO] Starting WeatherDisplay" << std::endl;
-    std::cout << "[INFO] Location:        " << cfg.location << std::endl;
+    std::cout << "[INFO] Location:        " << cfg.location
+              << " (" << cfg.latitude << ", " << cfg.longitude << ")" << std::endl;
     std::cout << "[INFO] Units:           " << cfg.units << std::endl;
     std::cout << "[INFO] Weather refresh: " << cfg.updateInterval << " seconds" << std::endl;
     std::cout << "[INFO] OLED format:     " << cfg.oledFormat << " (scale " << cfg.oledScale << ")" << std::endl;
+    std::cout << "[INFO] LED ring:        " << cfg.ledCount << " pixels @ " << cfg.ledSpiDevice
+              << ", brightness " << cfg.ledBrightness
+              << ", offset " << cfg.ledOffset
+              << ", " << (cfg.ledClockwise ? "clockwise" : "counterclockwise") << std::endl;
     std::cout << "[INFO] ==============================\n" << std::endl;
-
-    // // ---- Initialize LCD (HD44780 over I2C @ 0x27) ----
-    // int lcdFd = wiringPiI2CSetup(0x27);
-    // if (lcdFd < 0) {
-    //     std::cerr << "[ERROR] Failed to open LCD on I2C bus" << std::endl;
-    //     return 1;
-    // }
-    // lcd_init(lcdFd);
 
     // ---- Initialize LCD (HD44780 over I2C @ 0x27) ----
     int lcdFd = lcd_open(0x27);
@@ -87,7 +81,7 @@ int main() {
     }
     lcd_init(lcdFd);
 
-    // ---- Initialize OLED (SSD1306 over I2C @ 0x3C) ----
+    // ---- Initialize OLED (SSD1306 over I2C) ----
     OLED oled;
     if (!oled.begin(cfg.oledI2CAddr)) {
         std::cerr << "[ERROR] Failed to open OLED on I2C bus at 0x"
@@ -95,9 +89,28 @@ int main() {
         return 1;
     }
 
+    // ---- Initialize NeoPixel ring (WS2812 over SPI) ----
+    NeoPixel ring;
+    bool ringOk = ring.begin(cfg.ledCount, cfg.ledSpiDevice);
+    if (!ringOk) {
+        std::cerr << "[WARN] Failed to open LED ring at " << cfg.ledSpiDevice
+                  << " - continuing without ring." << std::endl;
+    } else {
+        ring.setOrientation(cfg.ledOffset, cfg.ledClockwise);
+        ring.setBrightness(cfg.ledBrightness);
+        ring.clear();
+        ring.show();
+    }
+
+    // ---- Configure ring controller ----
+    celestial::Observer obs{cfg.latitude, cfg.longitude};
+    RingDisplay ringDisplay;
+    if (ringOk) ringDisplay.configure(&ring, obs);
+
     // ---- Main loop: tick once per second ----
     using clock = std::chrono::steady_clock;
-    auto lastWeatherFetch = clock::time_point{};   // forces immediate fetch
+    auto lastWeatherFetch = clock::time_point{};
+    auto lastRingUpdate   = clock::time_point{};
     std::string lcdLine1 = "Loading...";
     std::string lcdLine2 = "";
 
@@ -112,7 +125,15 @@ int main() {
             std::cerr << "[WARN] OLED show() failed" << std::endl;
         }
 
-        // ---- N Hz (configurable): refresh weather + LCD ----
+        // ---- 1/60 Hz: refresh ring ----
+        bool needRing = (lastRingUpdate == clock::time_point{}) ||
+            std::chrono::duration_cast<std::chrono::seconds>(tickStart - lastRingUpdate).count() >= 60;
+        if (needRing && ringOk) {
+            ringDisplay.update(now);
+            lastRingUpdate = tickStart;
+        }
+
+        // ---- 1/N Hz: refresh weather + LCD ----
         bool needWeather = (lastWeatherFetch == clock::time_point{}) ||
             std::chrono::duration_cast<std::chrono::seconds>(tickStart - lastWeatherFetch).count() >= cfg.updateInterval;
 
@@ -128,7 +149,7 @@ int main() {
             lastWeatherFetch = tickStart;
         }
 
-        // Always re-paint the LCD so it doesn't go stale (and to clear any line-length leftovers).
+        // Always re-paint the LCD so it doesn't go stale.
         lcd_display(lcdFd, padTo(lcdLine1, 16), padTo(lcdLine2, 16));
 
         // ---- Sleep until the next 1-second boundary ----
