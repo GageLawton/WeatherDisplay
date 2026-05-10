@@ -1,5 +1,5 @@
-# Mac-only test build for the RingDisplay controller (mock SPI).
-#   make -f Makefile.ring
+# Mac-only ring controller test (mock SPI).
+#   make -f test/Makefile.ring
 #   ./test_ring
 #   open test_output/ring_day_*.ppm
 
@@ -10,12 +10,12 @@ TARGET   := test_ring
 
 all: $(TARGET)
 
-$(TARGET): $(SRCS)
-	$(CXX) $(CXXFLAGS) $(SRCS) -o $(TARGET)
-
 view: $(TARGET)
 	./$(TARGET)
 	@open test_output/ring_day_*.ppm
+
+$(TARGET): $(SRCS)
+	$(CXX) $(CXXFLAGS) $(SRCS) -o $(TARGET)
 
 clean:
 	rm -f $(TARGET)

@@ -1,5 +1,5 @@
-# Mac-only test build for the NeoPixel ring driver (mock SPI).
-#   make -f Makefile.neopixel
+# Mac-only NeoPixel driver test (mock SPI).
+#   make -f test/Makefile.neopixel
 #   ./test_neopixel
 #   open test_output/ring_*.ppm
 
