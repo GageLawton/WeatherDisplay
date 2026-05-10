@@ -1,0 +1,24 @@
+# Mac-only OLED renderer test.
+#   make -f test/Makefile.oled
+#   ./test_oled
+#   open test_output/*.pgm
+
+CXX      := clang++
+CXXFLAGS := -std=c++17 -Wall -Wextra -O2 -Iinclude
+SRCS     := src/i2c_bus.cpp src/oled.cpp src/oled_font.cpp test/test_oled.cpp
+TARGET   := test_oled
+
+all: $(TARGET)
+
+$(TARGET): $(SRCS)
+	$(CXX) $(CXXFLAGS) $(SRCS) -o $(TARGET)
+
+view: $(TARGET)
+	./$(TARGET)
+	@open test_output/*.pgm
+
+clean:
+	rm -f $(TARGET)
+	rm -rf test_output
+
+.PHONY: all clean view

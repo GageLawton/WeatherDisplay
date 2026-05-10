@@ -1,5 +1,5 @@
-# Mac-only test build for the celestial math.
-#   make -f Makefile.celestial
+# Mac-only celestial-math test.
+#   make -f test/Makefile.celestial
 #   ./test_celestial
 
 CXX      := clang++

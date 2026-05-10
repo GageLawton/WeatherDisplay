@@ -1,7 +1,7 @@
 #include "config.h"
+#include "log.h"
 #include <fstream>
 #include <cstdlib>
-#include <iostream>
 #include "json.hpp"
 
 namespace {
@@ -22,7 +22,6 @@ void Config::load(const std::string& filePath) {
     oledScale      = "auto";
     oledI2CAddr    = 0x3C;
 
-    // Westmont, IL defaults for celestial calc.
     latitude       = 41.7958;
     longitude      = -87.9756;
 
@@ -39,20 +38,17 @@ void Config::load(const std::string& filePath) {
             nlohmann::json j;
             inFile >> j;
 
-            // Top-level flat keys (legacy / GitHub Actions style).
             if (j.contains("WEATHER_API_KEY"))   apiKey         = j["WEATHER_API_KEY"].get<std::string>();
             if (j.contains("WEATHER_LOCATION"))  location       = j["WEATHER_LOCATION"].get<std::string>();
             if (j.contains("UNITS"))             units          = j["UNITS"].get<std::string>();
             if (j.contains("UPDATE_INTERVAL"))   updateInterval = j["UPDATE_INTERVAL"].get<int>();
 
-            // Location block.
             if (j.contains("location")) {
                 const auto& loc = j["location"];
                 if (loc.contains("latitude"))  latitude  = loc["latitude"].get<double>();
                 if (loc.contains("longitude")) longitude = loc["longitude"].get<double>();
             }
 
-            // OLED block.
             if (j.contains("oled")) {
                 const auto& o = j["oled"];
                 if (o.contains("format")) oledFormat = o["format"].get<std::string>();
@@ -68,7 +64,6 @@ void Config::load(const std::string& filePath) {
                 }
             }
 
-            // LED ring block.
             if (j.contains("led")) {
                 const auto& l = j["led"];
                 if (l.contains("count"))      ledCount      = l["count"].get<int>();
@@ -78,7 +73,7 @@ void Config::load(const std::string& filePath) {
                 if (l.contains("spi_device")) ledSpiDevice  = l["spi_device"].get<std::string>();
             }
         } catch (const std::exception& e) {
-            std::cerr << "[WARNING] Failed to parse " << filePath << ": " << e.what() << std::endl;
+            LOG_WARN("Failed to parse " << filePath << ": " << e.what());
         }
     }
 
@@ -94,7 +89,7 @@ void Config::load(const std::string& filePath) {
     }
 
     // 4. Sanity guards.
-    if (apiKey.empty())         std::cerr << "[WARNING] No WEATHER_API_KEY set; weather will not work." << std::endl;
+    if (apiKey.empty())         LOG_WARN("No WEATHER_API_KEY set; weather will not work.");
     if (oledFormat.empty())     oledFormat = "HH:MM:SS";
     if (oledScale.empty())      oledScale  = "auto";
     if (updateInterval <= 0)    updateInterval = 600;

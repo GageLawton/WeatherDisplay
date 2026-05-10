@@ -1,20 +1,21 @@
 #include "config.h"
 #include "lcd.h"
+#include "log.h"
 #include "oled.h"
 #include "weather.h"
 #include "neopixel.h"
 #include "ring.h"
 #include "celestial.h"
+#include "temperature.h"
 
 #include <chrono>
 #include <ctime>
-#include <iostream>
 #include <string>
 #include <thread>
 
 namespace {
 
-// Translate friendly time placeholders ("HH:MM:SS", "HH:MM") to strftime.
+// Translate friendly time placeholders to strftime tokens.
 std::string formatTime(const std::string& fmt, std::time_t t) {
     std::tm tm = *std::localtime(&t);
     std::string sf;
@@ -69,41 +70,40 @@ int main() {
     Config cfg;
     cfg.load("config.json");
 
-    std::cout << "[INFO] ==============================" << std::endl;
-    std::cout << "[INFO] Starting WeatherDisplay" << std::endl;
-    std::cout << "[INFO] Location:        " << cfg.location
-              << " (" << cfg.latitude << ", " << cfg.longitude << ")" << std::endl;
-    std::cout << "[INFO] Units:           " << cfg.units << std::endl;
-    std::cout << "[INFO] Weather refresh: " << cfg.updateInterval << " seconds" << std::endl;
-    std::cout << "[INFO] OLED format:     " << cfg.oledFormat << " (scale " << cfg.oledScale << ")" << std::endl;
-    std::cout << "[INFO] LED ring:        " << cfg.ledCount << " pixels @ " << cfg.ledSpiDevice
-              << ", brightness " << cfg.ledBrightness
-              << ", offset " << cfg.ledOffset
-              << ", " << (cfg.ledClockwise ? "clockwise" : "counterclockwise") << std::endl;
-    std::cout << "[INFO] ==============================\n" << std::endl;
+    LOG_INFO("==============================");
+    LOG_INFO("Starting WeatherDisplay");
+    LOG_INFO("Location:        " << cfg.location << " (" << cfg.latitude << ", " << cfg.longitude << ")");
+    LOG_INFO("Units:           " << cfg.units);
+    LOG_INFO("Weather refresh: " << cfg.updateInterval << " seconds");
+    LOG_INFO("OLED format:     " << cfg.oledFormat << " (scale " << cfg.oledScale << ")");
+    LOG_INFO("LED ring:        " << cfg.ledCount << " pixels @ " << cfg.ledSpiDevice
+             << ", brightness " << cfg.ledBrightness
+             << ", offset " << cfg.ledOffset
+             << ", " << (cfg.ledClockwise ? "clockwise" : "counterclockwise"));
+    LOG_INFO("==============================");
 
-    // ---- Initialize LCD (HD44780 over I2C @ 0x27) ----
+    // ---- Initialize LCD ----
     int lcdFd = lcd_open(0x27);
     if (lcdFd < 0) {
-        std::cerr << "[ERROR] Failed to open LCD on I2C bus" << std::endl;
+        LOG_ERROR("Failed to open LCD on I2C bus");
         return 1;
     }
     lcd_init(lcdFd);
 
-    // ---- Initialize OLED (SSD1306 over I2C) ----
+    // ---- Initialize OLED ----
     OLED oled;
     if (!oled.begin(cfg.oledI2CAddr)) {
-        std::cerr << "[ERROR] Failed to open OLED on I2C bus at 0x"
-                  << std::hex << cfg.oledI2CAddr << std::dec << std::endl;
+        LOG_ERROR("Failed to open OLED on I2C bus at 0x"
+                  << std::hex << cfg.oledI2CAddr << std::dec);
         return 1;
     }
 
-    // ---- Initialize NeoPixel ring (WS2812 over SPI) ----
+    // ---- Initialize NeoPixel ring ----
     NeoPixel ring;
     bool ringOk = ring.begin(cfg.ledCount, cfg.ledSpiDevice);
     if (!ringOk) {
-        std::cerr << "[WARN] Failed to open LED ring at " << cfg.ledSpiDevice
-                  << " - continuing without ring." << std::endl;
+        LOG_WARN("Failed to open LED ring at " << cfg.ledSpiDevice
+                 << " - continuing without ring.");
     } else {
         ring.setOrientation(cfg.ledOffset, cfg.ledClockwise);
         ring.setBrightness(cfg.ledBrightness);
@@ -111,7 +111,7 @@ int main() {
         ring.show();
     }
 
-    // ---- Configure ring controller ----
+    // ---- Ring controller ----
     celestial::Observer obs{cfg.latitude, cfg.longitude};
     RingDisplay ringDisplay;
     if (ringOk) ringDisplay.configure(&ring, obs);
@@ -127,14 +127,14 @@ int main() {
         auto tickStart = clock::now();
         std::time_t now = std::time(nullptr);
 
-        // ---- 1 Hz: refresh OLED time ----
+        // 1 Hz: OLED time
         std::string timeStr = formatTime(cfg.oledFormat, now);
         drawTime(oled, timeStr, cfg.oledScale);
         if (!oled.show()) {
-            std::cerr << "[WARN] OLED show() failed" << std::endl;
+            LOG_WARN("OLED show() failed");
         }
 
-        // ---- 1/60 Hz: refresh ring ----
+        // 1/60 Hz: ring
         bool needRing = (lastRingUpdate == clock::time_point{}) ||
             std::chrono::duration_cast<std::chrono::seconds>(tickStart - lastRingUpdate).count() >= 60;
         if (needRing && ringOk) {
@@ -142,26 +142,24 @@ int main() {
             lastRingUpdate = tickStart;
         }
 
-        // ---- 1/N Hz: refresh weather + LCD ----
+        // 1/N Hz: weather + LCD
         bool needWeather = (lastWeatherFetch == clock::time_point{}) ||
             std::chrono::duration_cast<std::chrono::seconds>(tickStart - lastWeatherFetch).count() >= cfg.updateInterval;
 
         if (needWeather && !cfg.apiKey.empty()) {
-            std::cout << "[DEBUG] Fetching weather for \"" << cfg.location << "\"..." << std::endl;
+            LOG_INFO("Fetching weather for \"" << cfg.location << "\"");
             Weather w = getWeather(cfg.apiKey, cfg.location);
-            float temp = (cfg.units == "F") ? (w.tempC * 9.0f / 5.0f) + 32.0f : w.tempC;
+            float temp = temperature::toUnits(w.tempC, cfg.units);
 
             lcdLine1 = "Temp: " + std::to_string((int)temp) + cfg.units;
             lcdLine2 = w.description.substr(0, 16);
 
-            std::cout << "[INFO] Weather: " << lcdLine1 << " / " << lcdLine2 << std::endl;
+            LOG_INFO("Weather: " << lcdLine1 << " / " << lcdLine2);
             lastWeatherFetch = tickStart;
         }
 
-        // Always re-paint the LCD so it doesn't go stale.
         lcd_display(lcdFd, padTo(lcdLine1, 16), padTo(lcdLine2, 16));
 
-        // ---- Sleep until the next 1-second boundary ----
         auto tickEnd  = clock::now();
         auto elapsed  = tickEnd - tickStart;
         auto target   = std::chrono::seconds(1);
