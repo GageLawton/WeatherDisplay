@@ -1,18 +1,24 @@
 # Build
 build/
 
+# Test binaries
+test_oled
+test_celestial
+test_neopixel
+test_ring
+weather_display_mac
+
 # Test output
 test_output/
-test_oled
 
 # Secrets
 .env
 
 # Editor / OS junk
-.DS_Service
 .DS_Store
 .vscode/
 *.swp
 
-# PGM dumps
+# Test image dumps (defense in depth)
 *.pgm
+*.ppm

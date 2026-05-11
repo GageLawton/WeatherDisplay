@@ -3,27 +3,41 @@
 #include <string>
 
 struct Config {
-    // Weather
+    // ---- Weather ----
     std::string apiKey;
     std::string location;
     std::string units;
-    int updateInterval;     // seconds between weather refreshes
+    int updateInterval;        // seconds between weather refreshes
 
-    // OLED display
-    std::string oledFormat;  // e.g. "HH:MM:SS", "HH:MM"
-    std::string oledScale;   // "auto" or a number ("1".."4")
-    int         oledI2CAddr; // typically 0x3C
+    // ---- Weather cache / alerting ----
+    int staleThresholdSec;     // mark data stale after this many seconds
+    int alertAfterFailures;    // consecutive fetch failures before emailing
 
-    // Celestial observer (used by the LED ring)
+    // ---- Alert thresholds ----
+    int   heavyRainPercent;    // tomorrow's chance-of-rain >= this -> alert
+    float bigTempDeltaF;       // |tomorrow.high - today.high| in F -> alert
+
+    // ---- Display rotation (seconds per screen) ----
+    int rotationCurrentSec;
+    int rotationTodaySec;
+    int rotationTomorrowSec;
+    int rotationAlertSec;
+
+    // ---- OLED display ----
+    std::string oledFormat;
+    std::string oledScale;
+    int         oledI2CAddr;
+
+    // ---- Celestial observer ----
     double      latitude;
     double      longitude;
 
-    // LED ring
-    int         ledCount;        // number of pixels on the ring
-    double      ledBrightness;   // 0.0 - 1.0
-    int         ledOffset;       // logical->physical pixel offset
-    bool        ledClockwise;    // true if logical indices go clockwise
-    std::string ledSpiDevice;    // typically "/dev/spidev0.0"
+    // ---- LED ring ----
+    int         ledCount;
+    double      ledBrightness;
+    int         ledOffset;
+    bool        ledClockwise;
+    std::string ledSpiDevice;
 
     void load(const std::string& filePath);
 };

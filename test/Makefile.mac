@@ -1,5 +1,5 @@
 # Mac-only build of the full weather_display binary.
-# Uses mock I2C, mock LCD, mock SPI. Real libcurl for weather.
+# Uses mock I2C, mock LCD, mock SPI. Real libcurl for weather + Gmail SMTP.
 #
 # From the project root:
 #   make -f test/Makefile.mac
@@ -13,6 +13,10 @@ LDFLAGS  := -lcurl
 SRCS := \
   src/config.cpp \
   src/weather.cpp \
+  src/weather_cache.cpp \
+  src/weather_alerts.cpp \
+  src/alerter.cpp \
+  src/display_rotation.cpp \
   src/i2c_bus.cpp \
   src/oled.cpp \
   src/oled_font.cpp \
