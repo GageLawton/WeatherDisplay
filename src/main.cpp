@@ -1,14 +1,19 @@
+#include "alerter.h"
+#include "celestial.h"
 #include "config.h"
+#include "display_rotation.h"
 #include "lcd.h"
 #include "log.h"
-#include "oled.h"
-#include "weather.h"
 #include "neopixel.h"
+#include "oled.h"
 #include "ring.h"
-#include "celestial.h"
 #include "temperature.h"
+#include "weather.h"
+#include "weather_alerts.h"
+#include "weather_cache.h"
 
 #include <chrono>
+#include <cstdlib>
 #include <ctime>
 #include <string>
 #include <thread>
@@ -20,18 +25,14 @@ std::string formatTime(const std::string& fmt, std::time_t t) {
     std::tm tm = *std::localtime(&t);
     std::string sf;
     for (size_t i = 0; i < fmt.size(); ) {
-        // 12-hour formats. Order matters - longest first.
         if      (fmt.compare(i, 11, "II:MM:SS AP") == 0) { sf += "%I:%M:%S %p"; i += 11; }
         else if (fmt.compare(i, 8,  "II:MM AP")    == 0) { sf += "%I:%M %p";    i += 8;  }
         else if (fmt.compare(i, 8,  "II:MM:SS")    == 0) { sf += "%I:%M:%S";    i += 8;  }
         else if (fmt.compare(i, 5,  "II:MM")       == 0) { sf += "%I:%M";       i += 5;  }
-        // 24-hour formats.
         else if (fmt.compare(i, 8,  "HH:MM:SS")    == 0) { sf += "%H:%M:%S";    i += 8;  }
         else if (fmt.compare(i, 5,  "HH:MM")       == 0) { sf += "%H:%M";       i += 5;  }
-        // Standalone tokens.
         else if (fmt.compare(i, 2,  "SS")          == 0) { sf += "%S";          i += 2;  }
         else if (fmt.compare(i, 2,  "AP")          == 0) { sf += "%p";          i += 2;  }
-        // Pass-through.
         else { sf += fmt[i++]; }
     }
     char buf[64];
@@ -63,7 +64,7 @@ std::string padTo(const std::string& s, size_t width) {
     return s + std::string(width - s.size(), ' ');
 }
 
-} // namespace
+} // anonymous namespace
 
 int main() {
     // ---- Load configuration ----
@@ -75,11 +76,17 @@ int main() {
     LOG_INFO("Location:        " << cfg.location << " (" << cfg.latitude << ", " << cfg.longitude << ")");
     LOG_INFO("Units:           " << cfg.units);
     LOG_INFO("Weather refresh: " << cfg.updateInterval << " seconds");
+    LOG_INFO("Stale after:     " << cfg.staleThresholdSec << " seconds");
+    LOG_INFO("Alert after:     " << cfg.alertAfterFailures << " consecutive failures");
+    LOG_INFO("Rotation:        Current=" << cfg.rotationCurrentSec
+              << "s, Today=" << cfg.rotationTodaySec
+              << "s, Tomorrow=" << cfg.rotationTomorrowSec
+              << "s, Alert=" << cfg.rotationAlertSec << "s");
     LOG_INFO("OLED format:     " << cfg.oledFormat << " (scale " << cfg.oledScale << ")");
     LOG_INFO("LED ring:        " << cfg.ledCount << " pixels @ " << cfg.ledSpiDevice
-             << ", brightness " << cfg.ledBrightness
-             << ", offset " << cfg.ledOffset
-             << ", " << (cfg.ledClockwise ? "clockwise" : "counterclockwise"));
+              << ", brightness " << cfg.ledBrightness
+              << ", offset " << cfg.ledOffset
+              << ", " << (cfg.ledClockwise ? "clockwise" : "counterclockwise"));
     LOG_INFO("==============================");
 
     // ---- Initialize LCD ----
@@ -116,25 +123,64 @@ int main() {
     RingDisplay ringDisplay;
     if (ringOk) ringDisplay.configure(&ring, obs);
 
+    // ---- Weather subsystems ----
+    WeatherCache cache;
+    cache.configure(cfg.updateInterval, cfg.staleThresholdSec, cfg.alertAfterFailures);
+
+    weather_alerts::Thresholds thresholds;
+    thresholds.heavyRainPercent = cfg.heavyRainPercent;
+    thresholds.bigTempDeltaF    = cfg.bigTempDeltaF;
+
+    DisplayRotation rotation;
+    DisplayRotation::Durations durations;
+    durations.currentSec  = cfg.rotationCurrentSec;
+    durations.todaySec    = cfg.rotationTodaySec;
+    durations.tomorrowSec = cfg.rotationTomorrowSec;
+    durations.alertSec    = cfg.rotationAlertSec;
+    rotation.configure(durations, cfg.units);
+
+    Alerter alerter;
+    alerter.configure();
+
     // ---- Main loop: tick once per second ----
     using clock = std::chrono::steady_clock;
-    auto lastWeatherFetch = clock::time_point{};
-    auto lastRingUpdate   = clock::time_point{};
-    std::string lcdLine1 = "Loading...";
-    std::string lcdLine2 = "";
+    auto lastRingUpdate = clock::time_point{};
 
     while (true) {
         auto tickStart = clock::now();
         std::time_t now = std::time(nullptr);
 
-        // 1 Hz: OLED time
+        // ---- 1 Hz: OLED time ----
         std::string timeStr = formatTime(cfg.oledFormat, now);
         drawTime(oled, timeStr, cfg.oledScale);
         if (!oled.show()) {
             LOG_WARN("OLED show() failed");
         }
 
-        // 1/60 Hz: ring
+        // ---- Weather: fetch when due ----
+        if (!cfg.apiKey.empty() && cache.shouldFetchNow(now)) {
+            bool ok = cache.tryFetch(cfg.apiKey, cfg.location, now);
+            if (ok) {
+                const auto& r = cache.lastReport();
+                LOG_INFO("Weather: " << static_cast<int>(temperature::toUnits(r.current.tempC, cfg.units))
+                          << cfg.units << " " << r.current.description
+                          << " (" << r.forecast.size() << " forecast day(s), "
+                          << r.alerts.size() << " API alert(s))");
+                alerter.clearOutageState();
+            } else if (cache.shouldAlert(now)) {
+                alerter.notifyApiOutage(now,
+                                        cache.consecutiveFailures(),
+                                        cache.lastSuccessTime());
+            }
+        }
+
+        // ---- Detect alerts + push to display + ring + emailer ----
+        auto alertSet = weather_alerts::detect(cache.lastReport(), thresholds);
+        rotation.setData(cache.lastReport(), alertSet, cache.isStale(now));
+        if (ringOk) ringDisplay.setAlerts(alertSet);
+        alerter.notifyWeatherAlerts(alertSet, now);
+
+        // ---- 1/60 Hz: ring update ----
         bool needRing = (lastRingUpdate == clock::time_point{}) ||
             std::chrono::duration_cast<std::chrono::seconds>(tickStart - lastRingUpdate).count() >= 60;
         if (needRing && ringOk) {
@@ -142,24 +188,11 @@ int main() {
             lastRingUpdate = tickStart;
         }
 
-        // 1/N Hz: weather + LCD
-        bool needWeather = (lastWeatherFetch == clock::time_point{}) ||
-            std::chrono::duration_cast<std::chrono::seconds>(tickStart - lastWeatherFetch).count() >= cfg.updateInterval;
+        // ---- 1 Hz: LCD ----
+        auto lines = rotation.tick(now);
+        lcd_display(lcdFd, padTo(lines.line1, 16), padTo(lines.line2, 16));
 
-        if (needWeather && !cfg.apiKey.empty()) {
-            LOG_INFO("Fetching weather for \"" << cfg.location << "\"");
-            Weather w = getWeather(cfg.apiKey, cfg.location);
-            float temp = temperature::toUnits(w.tempC, cfg.units);
-
-            lcdLine1 = "Temp: " + std::to_string((int)temp) + cfg.units;
-            lcdLine2 = w.description.substr(0, 16);
-
-            LOG_INFO("Weather: " << lcdLine1 << " / " << lcdLine2);
-            lastWeatherFetch = tickStart;
-        }
-
-        lcd_display(lcdFd, padTo(lcdLine1, 16), padTo(lcdLine2, 16));
-
+        // ---- Sleep until the next 1-second boundary ----
         auto tickEnd  = clock::now();
         auto elapsed  = tickEnd - tickStart;
         auto target   = std::chrono::seconds(1);
